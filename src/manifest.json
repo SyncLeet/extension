@@ -1,0 +1,20 @@
+{
+    "manifest_version": 3,
+
+    "name": "LeetSync",
+    "description": "Synchrnoize your LeetCode submissions to GitHub",
+    "version": "1.0",
+
+    "permissions": [
+        "webRequest"
+    ],
+    "host_permissions": [
+        "https://leetcode.com/*"
+    ],
+
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    }
+
+}

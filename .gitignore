@@ -1,0 +1,6 @@
+# Developments
+**/.vscode/**
+**/node_modules/**
+
+# Production
+**/build/**

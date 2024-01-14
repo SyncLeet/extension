@@ -1,0 +1,13 @@
+{
+  "name": "leetsync",
+  "version": "1.0.0",
+  "repository": "https://github.com/haok1402/LeetSync.git",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chrome": "^0.0.256",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
