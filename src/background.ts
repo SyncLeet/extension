@@ -1,3 +1,5 @@
+import { GraghQueryRequest } from "./modules/interface";
+
 const submittedIds = new Set<number>();
 
 chrome.webRequest.onBeforeRequest.addListener(
@@ -11,11 +13,12 @@ chrome.webRequest.onBeforeRequest.addListener(
 
 chrome.webRequest.onBeforeRequest.addListener(
   (details) => {
-    const arrayBuffer = details.requestBody.raw[0].bytes;
-    const textDecoder = new TextDecoder("utf-8");
-    const decodedJson = JSON.parse(textDecoder.decode(arrayBuffer));
-    if (decodedJson?.operationName == "submissionDetails") {
-      const sid = decodedJson.variables.submissionId;
+    const encoded = details.requestBody.raw[0].bytes;
+    const decoder = new TextDecoder("utf-8");
+    const decoded = decoder.decode(encoded);
+    const request: GraghQueryRequest = JSON.parse(decoded);
+    if (request.operationName == "submissionDetails") {
+      const sid = request.variables.submissionId;
       if (submittedIds.delete(sid)) {
         // perform a graphQL to get the submission details
         // fetch("https://leetcode.com/graphql/", {
