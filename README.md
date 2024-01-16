@@ -1,6 +1,14 @@
 # LeetSync
 
+![Build Check](https://github.com/haok1402/LeetSync/actions/workflows/build-check.yml/badge.svg)
+
 Synchronize your LeetCode submissions to GitHub.
+
+Contents
+
+- [Contributing](#contributing)
+  - [Setup Instructions](#setup-instructions)
+  - [Caveats](#caveats)
 
 ## Contributing
 
