@@ -8,6 +8,13 @@
   "permissions": ["webRequest", "cookies"],
   "host_permissions": ["https://leetcode.com/*"],
 
+  "content_scripts": [
+    {
+      "matches": ["https://leetcode.com/*"],
+      "js": ["foreground.js"]
+    }
+  ],
+
   "background": {
     "service_worker": "background.js",
     "type": "module"

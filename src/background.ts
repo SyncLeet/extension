@@ -1,4 +1,5 @@
 import { GraghQueryRequest } from "./modules/interface";
+import { Message } from "./modules/message";
 
 const submittedIds = new Set<number>();
 
@@ -20,16 +21,41 @@ chrome.webRequest.onBeforeRequest.addListener(
     if (request.operationName == "submissionDetails") {
       const sid = request.variables.submissionId;
       if (submittedIds.delete(sid)) {
-        // perform a graphQL to get the submission details
-        // fetch("https://leetcode.com/graphql/", {
-        //   body: '{"query":"\\n    query submissionDetails($submissionId: Int!) {\\n  submissionDetails(submissionId: $submissionId) {\\n    runtime\\n    runtimeDisplay\\n    runtimePercentile\\n    runtimeDistribution\\n    memory\\n    memoryDisplay\\n    memoryPercentile\\n    memoryDistribution\\n    code\\n    timestamp\\n    statusCode\\n    user {\\n      username\\n      profile {\\n        realName\\n        userAvatar\\n      }\\n    }\\n    lang {\\n      name\\n      verboseName\\n    }\\n    question {\\n      questionId\\n      titleSlug\\n      hasFrontendPreview\\n    }\\n    notes\\n    flagType\\n    topicTags {\\n      tagId\\n      slug\\n      name\\n    }\\n    runtimeError\\n    compileError\\n    lastTestcase\\n    totalCorrect\\n    totalTestcases\\n    fullCodeOutput\\n    testDescriptions\\n    testBodies\\n    testInfo\\n  }\\n}\\n    ","variables":{"submissionId":1146399373},"operationName":"submissionDetails"}',
-        //   method: "POST",
-        //   mode: "cors",
-        //   credentials: "include",
-        // });
+        chrome.tabs.sendMessage(details.tabId, {
+          type: "requestDetails",
+          payload: {
+            submissionId: sid,
+          },
+        });
       }
     }
   },
   { urls: ["https://leetcode.com/graphql/"] },
   ["requestBody"]
 );
+
+/**
+ * @example console.log(message.payload.details)
+ * {
+ *   "runtimeDisplay": "36 ms",
+ *   "runtimePercentile": 91.8451,
+ *   "memoryDisplay": "17.5 MB",
+ *   "memoryPercentile": 45.47570000000001,
+ *   "code": "class Solution:\n    def hIndex(self, citations: List[int]) -> int:\n        citations.sort()\n        n, h = len(citations), 0\n        for i, x in enumerate(citations):\n            papersLeft = n - i\n            for y in range(h, x):\n                if papersLeft >= y:\n                    h = y\n            if papersLeft >= x:\n                h = x\n                continue\n            break\n        return h",
+ *   "lang": {
+ *     "name": "python3"
+ *   },
+ *   "question": {
+ *     "questionId": "274",
+ *     "titleSlug": "h-index"
+ *   }
+ * }
+ */
+
+chrome.runtime.onMessage.addListener((message: Message) => {
+  switch (message.type) {
+    case "responseDetails":
+      console.log(message.payload.details);
+      return true;
+  }
+});
