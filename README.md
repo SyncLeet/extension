@@ -4,8 +4,6 @@
 
 Synchronize your LeetCode submissions to GitHub.
 
-Contents
-
 - [Contributing](#contributing)
   - [Setup Instructions](#setup-instructions)
   - [Caveats](#caveats)
