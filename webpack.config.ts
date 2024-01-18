@@ -26,7 +26,9 @@ const config: webpack.Configuration = {
   },
   plugins: [
     new CopyPlugin({
-      patterns: [{ from: "public/manifest.json", to: "manifest.json" }],
+      patterns: [{ from: "public/manifest.json", to: "manifest.json" },
+                 { from: "public/popup.html", to: "popup.html" },
+                 { from: "public/popup.js", to: "popup.js" }],
     }),
   ],
 };

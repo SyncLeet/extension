@@ -59,3 +59,15 @@ chrome.runtime.onMessage.addListener((message: Message) => {
       return true;
   }
 });
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'authenticateGitHub') {
+    chrome.identity.launchWebAuthFlow({
+      url: 'https://github.com/login/oauth/authorize?client_id=CLIENT_ID&scope=user',
+      interactive: true
+    }, (redirectUrl: string) => {
+
+      console.log('Redirect URL:', redirectUrl);
+    });
+  }
+});

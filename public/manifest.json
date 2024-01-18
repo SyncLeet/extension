@@ -5,8 +5,12 @@
   "description": "Synchrnoize your LeetCode submissions to GitHub",
   "version": "1.0",
 
-  "permissions": ["webRequest", "cookies"],
+  "permissions": ["webRequest", "cookies", "storage", "identity"],
   "host_permissions": ["https://leetcode.com/*"],
+
+  "action": {
+    "default_popup": "popup.html"
+  },
 
   "content_scripts": [
     {
