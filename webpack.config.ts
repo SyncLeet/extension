@@ -1,6 +1,7 @@
 import path from "path";
 import webpack from "webpack";
 import CopyPlugin from "copy-webpack-plugin";
+import { DefinePlugin } from "webpack";
 
 const config: webpack.Configuration = {
   mode: "production",
@@ -25,10 +26,14 @@ const config: webpack.Configuration = {
     ],
   },
   plugins: [
+    new DefinePlugin({
+      "process.env": {
+        CLIENT_ID: JSON.stringify(process.env.CLIENT_ID),
+        CLIENT_SECRET: JSON.stringify(process.env.CLIENT_SECRET),
+      },
+    }),
     new CopyPlugin({
-      patterns: [{ from: "public/manifest.json", to: "manifest.json" },
-                 { from: "public/popup.html", to: "popup.html" },
-                 { from: "public/popup.js", to: "popup.js" }],
+      patterns: [{ from: "public/manifest.json", to: "manifest.json" }],
     }),
   ],
 };

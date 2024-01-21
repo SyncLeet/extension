@@ -6,11 +6,7 @@
   "version": "1.0",
 
   "permissions": ["webRequest", "cookies", "storage", "identity"],
-  "host_permissions": ["https://leetcode.com/*"],
-
-  "action": {
-    "default_popup": "popup.html"
-  },
+  "host_permissions": ["https://leetcode.com/*", "https://github.com/*"],
 
   "content_scripts": [
     {

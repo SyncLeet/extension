@@ -1,38 +1,52 @@
 import { GraghQueryRequest } from "./modules/interface";
 import { Message } from "./modules/message";
 
+/**
+ * React to LeetCode Activities
+ */
+
 const submittedIds = new Set<number>();
 
-chrome.webRequest.onBeforeRequest.addListener(
-  (details) => {
-    const regex = /detail\/(.*?)\/check/;
-    const match = details.url.match(regex);
-    submittedIds.add(parseInt(match[1], 10));
-  },
-  { urls: ["https://leetcode.com/submissions/detail/*/check/"] }
-);
+const launchSubmissionListener = () => {
+  chrome.webRequest.onBeforeRequest.addListener(
+    (details) => {
+      const regex = /detail\/(.*?)\/check/;
+      const match = details.url.match(regex);
+      submittedIds.add(parseInt(match[1], 10));
+      console.log(submittedIds);
+    },
+    { urls: ["https://leetcode.com/submissions/detail/*/check/"] }
+  );
+};
 
-chrome.webRequest.onBeforeRequest.addListener(
-  (details) => {
-    const encoded = details.requestBody.raw[0].bytes;
-    const decoder = new TextDecoder("utf-8");
-    const decoded = decoder.decode(encoded);
-    const request: GraghQueryRequest = JSON.parse(decoded);
-    if (request.operationName == "submissionDetails") {
-      const sid = request.variables.submissionId;
-      if (submittedIds.delete(sid)) {
-        chrome.tabs.sendMessage(details.tabId, {
-          type: "requestDetails",
-          payload: {
-            submissionId: sid,
-          },
-        });
+const launchGraphQueryListener = () => {
+  chrome.webRequest.onBeforeRequest.addListener(
+    (details) => {
+      const encoded = details.requestBody.raw[0].bytes;
+      const decoder = new TextDecoder("utf-8");
+      const decoded = decoder.decode(encoded);
+      const request: GraghQueryRequest = JSON.parse(decoded);
+      if (request.operationName == "submissionDetails") {
+        const sid = request.variables.submissionId;
+        if (submittedIds.delete(sid)) {
+          console.log(sid);
+          chrome.tabs.sendMessage(details.tabId, {
+            type: "requestDetails",
+            payload: {
+              id: sid,
+            },
+          });
+        }
       }
-    }
-  },
-  { urls: ["https://leetcode.com/graphql/"] },
-  ["requestBody"]
-);
+    },
+    { urls: ["https://leetcode.com/graphql/"] },
+    ["requestBody"]
+  );
+};
+
+/**
+ * React to Incoming Messages
+ */
 
 /**
  * @example console.log(message.payload.details)
@@ -52,22 +66,111 @@ chrome.webRequest.onBeforeRequest.addListener(
  * }
  */
 
-chrome.runtime.onMessage.addListener((message: Message) => {
-  switch (message.type) {
-    case "responseDetails":
-      console.log(message.payload.details);
-      return true;
-  }
+const owner = "";
+const repo = "";
+
+const launchMessageListener = (accessToken: string) => {
+  console.log(accessToken);
+  chrome.runtime.onMessage.addListener((message: Message) => {
+    switch (message.type) {
+      case "responseDetails":
+        const { details } = message.payload;
+        console.log(details);
+        fetch(
+          `https://api.github.com/repos/${owner}/${repo}/contents/${details.question.titleSlug}.txt`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        ).then((response) => {
+          if (response.ok) {
+            return response.json().then((data) => {
+              fetch(
+                `https://api.github.com/repos/${owner}/${repo}/contents/${details.question.titleSlug}.txt`,
+                {
+                  method: "PUT",
+                  headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                  },
+                  body: JSON.stringify({
+                    message: `${details.question.titleSlug}; ${details.runtimeDisplay}; ${details.memoryDisplay}`,
+                    committer: {
+                      name: "Hao Kang",
+                      email: "haok1402@gmail.com",
+                    },
+                    content: btoa(details.code),
+                    sha: data.sha,
+                  }),
+                }
+              );
+            });
+          }
+          fetch(
+            `https://api.github.com/repos/${owner}/${repo}/contents/${details.question.titleSlug}.txt`,
+            {
+              method: "PUT",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({
+                message: `${details.question.titleSlug}; ${details.runtimeDisplay}; ${details.memoryDisplay}`,
+                committer: {
+                  name: "Hao Kang",
+                  email: "haok1402@gmail.com",
+                },
+                content: btoa(details.code),
+              }),
+            }
+          );
+        });
+    }
+    return true;
+  });
+};
+
+/**
+ * Handle OAuth2 flow with GitHub
+ */
+
+const authParams = new URLSearchParams({
+  client_id: process.env.CLIENT_ID,
+  redirect_uri: chrome.identity.getRedirectURL(),
+  scope: ["repo"].join(encodeURIComponent(" ")),
 });
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'authenticateGitHub') {
-    chrome.identity.launchWebAuthFlow({
-      url: 'https://github.com/login/oauth/authorize?client_id=CLIENT_ID&scope=user',
-      interactive: true
-    }, (redirectUrl: string) => {
+const webAuthFlowOptions = {
+  url: `https://github.com/login/oauth/authorize?${authParams}`,
+  interactive: true,
+};
 
-      console.log('Redirect URL:', redirectUrl);
+const webAuthFlowCallback = (responseURL: string) => {
+  console.log(responseURL);
+  const regex = /code=(.*)/;
+  const match = responseURL.match(regex);
+  fetch("https://github.com/login/oauth/access_token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      client_id: process.env.CLIENT_ID,
+      client_secret: process.env.CLIENT_SECRET,
+      code: match[1],
+    }),
+  })
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      }
+    })
+    .then((data) => {
+      launchSubmissionListener();
+      launchGraphQueryListener();
+      launchMessageListener(data.access_token);
     });
-  }
-});
+};
+
+chrome.identity.launchWebAuthFlow(webAuthFlowOptions, webAuthFlowCallback);

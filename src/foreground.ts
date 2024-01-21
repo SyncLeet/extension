@@ -27,7 +27,7 @@ chrome.runtime.onMessage.addListener(async (message: Message) => {
               }
             }
           `,
-          variables: { submissionId: message.payload.submissionId },
+          variables: { submissionId: message.payload.id },
           operationName: "submissionDetails",
         }),
         method: "POST",
@@ -42,6 +42,5 @@ chrome.runtime.onMessage.addListener(async (message: Message) => {
           payload: { details },
         });
       }
-      return true;
   }
 });

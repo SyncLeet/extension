@@ -1,9 +1,9 @@
-import { SubmissionDetails } from "./interface";
+import { SubmissionDetails, SubmissionId } from "./interface";
 
 interface RequestDetailsMessage {
   type: "requestDetails";
   payload: {
-    submissionId: number;
+    id: SubmissionId;
   };
 }
 

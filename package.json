@@ -4,14 +4,15 @@
   "repository": "https://github.com/haok1402/LeetSync.git",
   "license": "MIT",
   "scripts": {
-    "build": "webpack",
-    "watch": "webpack --watch"
+    "build": "dotenv -- webpack",
+    "watch": "dotenv -- webpack --watch"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.256",
     "@types/node": "^20.11.0",
     "@types/webpack": "^5.28.5",
     "copy-webpack-plugin": "^12.0.1",
+    "dotenv-cli": "^7.3.0",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",

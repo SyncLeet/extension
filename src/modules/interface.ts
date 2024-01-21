@@ -4,6 +4,8 @@ export interface GraghQueryRequest {
   variables: Record<string, any>;
 }
 
+export type SubmissionId = number;
+
 export interface SubmissionDetails {
   runtimeDisplay: string;
   runtimePercentile: number;
