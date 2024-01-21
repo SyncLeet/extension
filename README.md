@@ -13,11 +13,13 @@ Synchronize your LeetCode submissions to GitHub.
 ### Setup Instructions
 
 1. Install dependencies by running `yarn install`.
-2. Depending on your use case, execute the following scripts:
+2. Create `.env` file under the root directory with the following contents:
+   - `CLIENT_ID` and the associated `CLIENT_SECRET` from GitHub OAuth App.
+3. Depending on your use case, execute the following scripts:
    - `yarn build` to build the project.
    - `yarn watch` to continuously build the project as files change.
-3. Enable developer mode in your Chrome browser by navigating to [chrome://extensions](chrome://extensions).
-4. Click on "Load unpacked" and select the dist folder to install the extension.
+4. Enable developer mode in your Chrome browser by navigating to [chrome://extensions](chrome://extensions).
+5. Click on "Load unpacked" and select the dist folder to install the extension.
 
 ### Caveats
 
