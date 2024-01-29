@@ -1,3 +1,5 @@
+import { getAccessToken } from "./modules/service";
+import { getUserEmail, getUserIdentity } from "./modules/service";
 import { GraghQueryRequest } from "./modules/interface";
 import { Message } from "./modules/message";
 
@@ -10,10 +12,8 @@ const submittedIds = new Set<number>();
 const launchSubmissionListener = () => {
   chrome.webRequest.onBeforeRequest.addListener(
     (details) => {
-      const regex = /detail\/(.*?)\/check/;
-      const match = details.url.match(regex);
+      const match = details.url.match(/detail\/(.*?)\/check/);
       submittedIds.add(parseInt(match[1], 10));
-      console.log(submittedIds);
     },
     { urls: ["https://leetcode.com/submissions/detail/*/check/"] }
   );
@@ -29,7 +29,6 @@ const launchGraphQueryListener = () => {
       if (request.operationName == "submissionDetails") {
         const sid = request.variables.submissionId;
         if (submittedIds.delete(sid)) {
-          console.log(sid);
           chrome.tabs.sendMessage(details.tabId, {
             type: "requestDetails",
             payload: {
@@ -66,18 +65,20 @@ const launchGraphQueryListener = () => {
  * }
  */
 
-const owner = "senf1";
 const repo = "leetcode";
 
-const launchMessageListener = (accessToken: string) => {
-  console.log(accessToken);
+const launchMessageListener = (
+  accessToken: string,
+  name: string,
+  login: string,
+  email: string
+) => {
   chrome.runtime.onMessage.addListener((message: Message) => {
     switch (message.type) {
       case "responseDetails":
         const { details } = message.payload;
-        console.log(details);
         fetch(
-          `https://api.github.com/repos/${owner}/${repo}/contents/${details.question.titleSlug}.txt`,
+          `https://api.github.com/repos/${login}/${repo}/contents/${details.question.titleSlug}.txt`,
           {
             method: "GET",
             headers: {
@@ -88,7 +89,7 @@ const launchMessageListener = (accessToken: string) => {
           if (response.ok) {
             return response.json().then((data) => {
               fetch(
-                `https://api.github.com/repos/${owner}/${repo}/contents/${details.question.titleSlug}.txt`,
+                `https://api.github.com/repos/${login}/${repo}/contents/${details.question.titleSlug}.txt`,
                 {
                   method: "PUT",
                   headers: {
@@ -96,10 +97,7 @@ const launchMessageListener = (accessToken: string) => {
                   },
                   body: JSON.stringify({
                     message: `${details.question.titleSlug}; ${details.runtimeDisplay}; ${details.memoryDisplay}`,
-                    committer: {
-                      name: "Sen Feng",
-                      email: "senfeng6@gmail.com",
-                    },
+                    committer: { name, email },
                     content: btoa(details.code),
                     sha: data.sha,
                   }),
@@ -108,7 +106,7 @@ const launchMessageListener = (accessToken: string) => {
             });
           }
           fetch(
-            `https://api.github.com/repos/${owner}/${repo}/contents/${details.question.titleSlug}.txt`,
+            `https://api.github.com/repos/${login}/${repo}/contents/${details.question.titleSlug}.txt`,
             {
               method: "PUT",
               headers: {
@@ -116,10 +114,7 @@ const launchMessageListener = (accessToken: string) => {
               },
               body: JSON.stringify({
                 message: `${details.question.titleSlug}; ${details.runtimeDisplay}; ${details.memoryDisplay}`,
-                committer: {
-                  name: "Sen Feng",
-                  email: "senfeng6@gmail.com",
-                },
+                committer: { name, email },
                 content: btoa(details.code),
               }),
             }
@@ -137,7 +132,7 @@ const launchMessageListener = (accessToken: string) => {
 const authParams = new URLSearchParams({
   client_id: process.env.CLIENT_ID,
   redirect_uri: chrome.identity.getRedirectURL(),
-  scope: ["repo"].join(encodeURIComponent(" ")),
+  scope: "repo user:email",
 });
 
 const webAuthFlowOptions = {
@@ -145,143 +140,16 @@ const webAuthFlowOptions = {
   interactive: true,
 };
 
-const webAuthFlowCallback = (responseURL: string) => {
-  console.log(responseURL);
-  const regex = /code=(.*)/;
-  const match = responseURL.match(regex);
-  fetch("https://github.com/login/oauth/access_token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      client_id: process.env.CLIENT_ID,
-      client_secret: process.env.CLIENT_SECRET,
-      code: match[1],
-    }),
-  })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-    })
-    .then((data) => {
-      checkExistingRepository(data.access_token, owner, "Leetcode");
-      launchSubmissionListener();
-      launchGraphQueryListener();
-      launchMessageListener(data.access_token);
-    });
-};
-
-const checkExistingRepository = (accessToken, owner, repoName) => {
-  const apiUrl = `https://api.github.com/repos/${owner}/${repoName}`;
-
-  fetch(apiUrl, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  })
-    .then((response) => {
-      if (response.ok) {
-        console.log(`Repository "${repoName}" already exists.`);
-      } else {
-        createRepository(accessToken, owner, repoName);
-      }
-    })
-    .catch((error) => {
-      createRepository(accessToken, owner, repoName);
-    });
-};
-
-const createRepository = (accessToken, owner, repoName) => {
-  const apiUrl = `https://api.github.com/user/repos`;
-
-  fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      name: repoName,
-    }),
-  })
-    .then((response) => response.json())
-    .then((newRepo) => {
-      console.log(`Repository "${newRepo.name}" created successfully!`);
-
-      createReadme(accessToken, owner, repoName)
-        .then(() => {
-          console.log(
-            "README file created successfully in the root of the repository!"
-          );
-          return createFolders(accessToken, owner, repoName, [
-            "Easy",
-            "Medium",
-            "Hard",
-          ]);
-        })
-        .then(() => {
-          console.log("Folders created successfully!");
-        })
-        .catch((error) =>
-          console.error("Error creating README file or folders:", error)
-        );
-    })
-    .catch((error) => console.error("Error creating repository:", error));
-};
-
-const createReadme = (accessToken, owner, repoName) => {
-  const fileName = "README.md";
-  const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/contents/${fileName}`;
-
-  return fetch(apiUrl, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      message: `Create ${fileName}`,
-      content: btoa(
-        `# ${repoName}\n\nThis is the README file for ${repoName}.`
-      ),
-    }),
-  });
-};
-
-const createFolders = async (accessToken, owner, repoName, folderNames) => {
-  for (const folderName of folderNames) {
-    try {
-      console.log(folderName);
-      await createFolder(
-        accessToken,
-        owner,
-        repoName,
-        `${folderName}/.gitkeep`
-      );
-    } catch (error) {
-      console.error(`Error creating folder ${folderName}:`, error);
-    }
-  }
-};
-
-const createFolder = (accessToken, owner, repoName, folderName) => {
-  const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/contents/${folderName}`;
-
-  return fetch(apiUrl, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      message: `Create folder: ${folderName}`,
-      content: btoa(""),
-    }),
-  });
+const webAuthFlowCallback = async (responseURL: string) => {
+  const match = responseURL.match(/code=(.*)/);
+  const { accessToken } = await getAccessToken(match[1]);
+  const [{ name, login }, { email }] = await Promise.all([
+    getUserIdentity(accessToken),
+    getUserEmail(accessToken),
+  ]);
+  launchSubmissionListener();
+  launchGraphQueryListener();
+  launchMessageListener(accessToken, name, login, email);
 };
 
 chrome.identity.launchWebAuthFlow(webAuthFlowOptions, webAuthFlowCallback);
