@@ -2,6 +2,7 @@ import { Octokit, App } from "octokit";
 import { newOctokitOptions, newSyncingRepository } from "./modules/service";
 import { GraghQueryRequest } from "./modules/interface";
 import { Message } from "./modules/message";
+import {languageFileExtensions} from './languagesConfig';
 
 /**
  * React to LeetCode Activities
@@ -61,15 +62,8 @@ const launchMessageListener = async (octokit: Octokit) => {
         const { titleSlug } = submissionDetails.question;
         const { runtimeDisplay, memoryDisplay } = submissionDetails;
         const { difficulty } = questionDetails;
-        // Modify file name based on submission language
-        switch (submissionDetails.lang.name) {
-          case "python3":
-            var file = `${difficulty}/${titleSlug}.py`;
-            break;
-          default:
-            var file = `${difficulty}/${titleSlug}.txt`;
-            break;
-        }
+        const fileExtension = languageFileExtensions[submissionDetails.lang.name] || languageFileExtensions.default;
+        const file = `${difficulty}/${titleSlug}.${fileExtension}`;
         // Prepare payload with base64-encoded content
         const payload = {
           owner: user.login,
