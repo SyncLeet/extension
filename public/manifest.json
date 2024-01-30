@@ -5,7 +5,7 @@
   "description": "Synchrnoize your LeetCode submissions to GitHub",
   "version": "1.0",
 
-  "permissions": ["webRequest", "cookies", "storage", "identity"],
+  "permissions": ["webRequest", "storage", "identity"],
   "host_permissions": ["https://leetcode.com/*", "https://github.com/*"],
 
   "content_scripts": [
