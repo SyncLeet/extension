@@ -1,4 +1,4 @@
-import { SubmissionDetails } from "./interface";
+import { QuestionDetails, SubmissionDetails } from "./interface";
 
 export const newOctokitOptions = async (
   code: string
@@ -38,9 +38,7 @@ export const getSubmissionDetails = async (
         query submissionDetails($submissionId: Int!) {
           submissionDetails(submissionId: $submissionId) {
             runtimeDisplay
-            runtimePercentile
             memoryDisplay
-            memoryPercentile
             code
             lang {
               name
@@ -66,4 +64,35 @@ export const getSubmissionDetails = async (
 
   const { data } = await response.json();
   return data.submissionDetails;
+};
+
+export const getQuestionDetails = async (
+  titleSlug: string
+): Promise<QuestionDetails> => {
+  const response = await fetch("https://leetcode.com/graphql/", {
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      query: `
+      query questionTitle($titleSlug: String!) {
+        question(titleSlug: $titleSlug) {
+          difficulty
+        }
+      }
+    `,
+      variables: { titleSlug },
+      operationName: "questionTitle",
+    }),
+    method: "POST",
+    mode: "cors",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to Get Question Title: ${response.status}`);
+  }
+
+  const { data } = await response.json();
+  return data.question;
 };

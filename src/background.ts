@@ -56,14 +56,18 @@ const launchMessageListener = async (octokit: Octokit) => {
   chrome.runtime.onMessage.addListener(async (message: Message) => {
     switch (message.type) {
       case "responseDetails":
-        const { details } = message.payload;
+        // Extract details from message
+        const { submissionDetails, questionDetails } = message.payload;
+        const { titleSlug } = submissionDetails.question;
+        const { runtimeDisplay, memoryDisplay } = submissionDetails;
+        const { difficulty } = questionDetails;
         // Modify file name based on submission language
-        switch (details.lang.name) {
+        switch (submissionDetails.lang.name) {
           case "python3":
-            var file = `${details.question.titleSlug}.py`;
+            var file = `${difficulty}/${titleSlug}.py`;
             break;
           default:
-            var file = `${details.question.titleSlug}.txt`;
+            var file = `${difficulty}/${titleSlug}.txt`;
             break;
         }
         // Prepare payload with base64-encoded content
@@ -71,8 +75,8 @@ const launchMessageListener = async (octokit: Octokit) => {
           owner: user.login,
           repo: "LeetCode",
           path: file,
-          message: `:white_check_mark: ${details.question.titleSlug} [${details.runtimeDisplay}; ${details.memoryDisplay}]`,
-          content: btoa(details.code),
+          message: `:white_check_mark: ${titleSlug} [${runtimeDisplay}; ${memoryDisplay}]`,
+          content: btoa(submissionDetails.code),
         };
         // Update if file exists, create otherwise
         try {
@@ -118,8 +122,10 @@ chrome.identity.launchWebAuthFlow(webAuthFlowOptions, async (responseURL) => {
     case null:
       throw new Error("Failed to Retrieve Authorization Code");
     default:
+      // exchange code for access token
       const options = await newOctokitOptions(code);
       const octokit = new Octokit(options);
+      // launch listeners
       await Promise.all([
         launchSubmissionListener(),
         launchGraphQueryListener(),

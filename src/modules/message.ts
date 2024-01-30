@@ -1,4 +1,4 @@
-import { SubmissionDetails, SubmissionId } from "./interface";
+import { QuestionDetails, SubmissionDetails, SubmissionId } from "./interface";
 
 interface RequestDetailsMessage {
   type: "requestDetails";
@@ -10,7 +10,8 @@ interface RequestDetailsMessage {
 interface ResponseDetailsMessage {
   type: "responseDetails";
   payload: {
-    details: SubmissionDetails;
+    submissionDetails: SubmissionDetails;
+    questionDetails: QuestionDetails;
   };
 }
 

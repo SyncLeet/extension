@@ -20,3 +20,7 @@ export interface SubmissionDetails {
     titleSlug: string;
   };
 }
+
+export interface QuestionDetails {
+  difficulty: string;
+}
