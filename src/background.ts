@@ -2,7 +2,7 @@ import { Octokit, App } from "octokit";
 import { newOctokitOptions, newSyncingRepository } from "./modules/service";
 import { GraghQueryRequest } from "./modules/interface";
 import { Message } from "./modules/message";
-import {languageFileExtensions} from './languagesConfig';
+import { languageFileExtensions } from './languagesConfig';
 
 /**
  * React to LeetCode Activities

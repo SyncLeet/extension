@@ -1,5 +1,9 @@
-// languagesConfig.js
-export const languageFileExtensions = {
+// languagesConfig.ts
+export interface LanguageFileExtensions {
+    [key: string]: string;
+}
+
+export const languageFileExtensions: LanguageFileExtensions = {
     python: 'py',
     python3: 'py',
     java: 'java',
