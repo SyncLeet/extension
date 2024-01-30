@@ -1,5 +1,5 @@
-import { getAccessToken } from "./modules/service";
-import { getUserEmail, getUserIdentity } from "./modules/service";
+import { Octokit, App } from "octokit";
+import { newOctokitOptions } from "./modules/service";
 import { GraghQueryRequest } from "./modules/interface";
 import { Message } from "./modules/message";
 
@@ -47,79 +47,47 @@ const launchGraphQueryListener = () => {
  * React to Incoming Messages
  */
 
-/**
- * @example console.log(message.payload.details)
- * {
- *   "runtimeDisplay": "36 ms",
- *   "runtimePercentile": 91.8451,
- *   "memoryDisplay": "17.5 MB",
- *   "memoryPercentile": 45.47570000000001,
- *   "code": "class Solution:\n    def hIndex(self, citations: List[int]) -> int:\n        citations.sort()\n        n, h = len(citations), 0\n        for i, x in enumerate(citations):\n            papersLeft = n - i\n            for y in range(h, x):\n                if papersLeft >= y:\n                    h = y\n            if papersLeft >= x:\n                h = x\n                continue\n            break\n        return h",
- *   "lang": {
- *     "name": "python3"
- *   },
- *   "question": {
- *     "questionId": "274",
- *     "titleSlug": "h-index"
- *   }
- * }
- */
-
-const repo = "leetcode";
-
-const launchMessageListener = (
-  accessToken: string,
-  name: string,
-  login: string,
-  email: string
-) => {
-  chrome.runtime.onMessage.addListener((message: Message) => {
+const launchMessageListener = async (octokit: Octokit) => {
+  const { data: user } = await octokit.rest.users.getAuthenticated();
+  chrome.runtime.onMessage.addListener(async (message: Message) => {
     switch (message.type) {
       case "responseDetails":
         const { details } = message.payload;
-        fetch(
-          `https://api.github.com/repos/${login}/${repo}/contents/${details.question.titleSlug}.txt`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
+        // Modify file name based on submission language
+        switch (details.lang.name) {
+          case "python3":
+            var file = `${details.question.titleSlug}.py`;
+            break;
+          default:
+            var file = `${details.question.titleSlug}.txt`;
+            break;
+        }
+        // Prepare payload with base64-encoded content
+        const payload = {
+          owner: user.login,
+          repo: "LeetCode",
+          path: file,
+          message: `:white_check_mark: ${details.question.titleSlug} [${details.runtimeDisplay}; ${details.memoryDisplay}]`,
+          content: btoa(details.code),
+        };
+        // Update if file exists, create otherwise
+        try {
+          const { data } = await octokit.rest.repos.getContent({
+            owner: user.login,
+            repo: "LeetCode",
+            path: file,
+          });
+          switch (Array.isArray(data) ? data[0].type : data.type) {
+            case "file":
+              octokit.rest.repos.createOrUpdateFileContents({
+                ...payload,
+                sha: Array.isArray(data) ? data[0].sha : data.sha,
+              });
           }
-        ).then((response) => {
-          if (response.ok) {
-            return response.json().then((data) => {
-              fetch(
-                `https://api.github.com/repos/${login}/${repo}/contents/${details.question.titleSlug}.txt`,
-                {
-                  method: "PUT",
-                  headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                  },
-                  body: JSON.stringify({
-                    message: `${details.question.titleSlug}; ${details.runtimeDisplay}; ${details.memoryDisplay}`,
-                    committer: { name, email },
-                    content: btoa(details.code),
-                    sha: data.sha,
-                  }),
-                }
-              );
-            });
-          }
-          fetch(
-            `https://api.github.com/repos/${login}/${repo}/contents/${details.question.titleSlug}.txt`,
-            {
-              method: "PUT",
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-              },
-              body: JSON.stringify({
-                message: `${details.question.titleSlug}; ${details.runtimeDisplay}; ${details.memoryDisplay}`,
-                committer: { name, email },
-                content: btoa(details.code),
-              }),
-            }
-          );
-        });
+        } catch (error) {
+          octokit.rest.repos.createOrUpdateFileContents(payload);
+        }
+        break;
     }
     return true;
   });
@@ -140,16 +108,18 @@ const webAuthFlowOptions = {
   interactive: true,
 };
 
-const webAuthFlowCallback = async (responseURL: string) => {
-  const match = responseURL.match(/code=(.*)/);
-  const { accessToken } = await getAccessToken(match[1]);
-  const [{ name, login }, { email }] = await Promise.all([
-    getUserIdentity(accessToken),
-    getUserEmail(accessToken),
-  ]);
-  launchSubmissionListener();
-  launchGraphQueryListener();
-  launchMessageListener(accessToken, name, login, email);
-};
-
-chrome.identity.launchWebAuthFlow(webAuthFlowOptions, webAuthFlowCallback);
+chrome.identity.launchWebAuthFlow(webAuthFlowOptions, async (responseURL) => {
+  const code = new URL(responseURL).searchParams.get("code");
+  switch (code) {
+    case null:
+      throw new Error("Failed to Retrieve Authorization Code");
+    default:
+      const options = await newOctokitOptions(code);
+      const octokit = new Octokit(options);
+      await Promise.all([
+        launchSubmissionListener(),
+        launchGraphQueryListener(),
+        launchMessageListener(octokit),
+      ]);
+  }
+});
