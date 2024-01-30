@@ -29,7 +29,6 @@ export const newOctokitOptions = async (
 export const getSubmissionDetails = async (
   submissionId: number
 ): Promise<SubmissionDetails> => {
-  console.log("getSubmissionDetails");
   const response = await fetch("https://leetcode.com/graphql/", {
     headers: {
       "content-type": "application/json",
