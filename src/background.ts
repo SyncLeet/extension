@@ -12,6 +12,7 @@ const submittedIds = new Set<number>();
 const launchSubmissionListener = () => {
   chrome.webRequest.onBeforeRequest.addListener(
     (details) => {
+      // Extract submission id from url
       const match = details.url.match(/detail\/(.*?)\/check/);
       submittedIds.add(parseInt(match[1], 10));
     },
@@ -22,13 +23,16 @@ const launchSubmissionListener = () => {
 const launchGraphQueryListener = () => {
   chrome.webRequest.onBeforeRequest.addListener(
     (details) => {
+      // Decode request body
       const encoded = details.requestBody.raw[0].bytes;
       const decoder = new TextDecoder("utf-8");
       const decoded = decoder.decode(encoded);
       const request: GraghQueryRequest = JSON.parse(decoded);
+      // Check if request is for submission details
       if (request.operationName == "submissionDetails") {
         const sid = request.variables.submissionId;
         if (submittedIds.delete(sid)) {
+          // Ask content script to retrieve those details
           chrome.tabs.sendMessage(details.tabId, {
             type: "requestDetails",
             payload: {
