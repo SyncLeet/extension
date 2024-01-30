@@ -1,3 +1,4 @@
+import { Octokit } from "octokit";
 import { QuestionDetails, SubmissionDetails } from "./interface";
 
 export const newOctokitOptions = async (
@@ -24,6 +25,20 @@ export const newOctokitOptions = async (
 
   const payload = await response.json();
   return { auth: payload.access_token };
+};
+
+export const newSyncingRepository = async (octokit: Octokit): Promise<void> => {
+  const { data } = await octokit.rest.repos.listForAuthenticatedUser();
+  const syncRepo = data.find((repo) => repo.name === "LeetCode");
+  if (!syncRepo) {
+    await octokit.rest.repos.createUsingTemplate({
+      template_owner: "haok1402",
+      template_repo: "LeetSync-Template",
+      name: "LeetCode",
+      description: "Sync: LeetCode -> GitHub",
+      private: true,
+    });
+  }
 };
 
 export const getSubmissionDetails = async (

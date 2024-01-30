@@ -1,5 +1,5 @@
 import { Octokit, App } from "octokit";
-import { newOctokitOptions } from "./modules/service";
+import { newOctokitOptions, newSyncingRepository } from "./modules/service";
 import { GraghQueryRequest } from "./modules/interface";
 import { Message } from "./modules/message";
 
@@ -122,9 +122,10 @@ chrome.identity.launchWebAuthFlow(webAuthFlowOptions, async (responseURL) => {
     case null:
       throw new Error("Failed to Retrieve Authorization Code");
     default:
-      // exchange code for access token
+      // prepare LeetSync
       const options = await newOctokitOptions(code);
       const octokit = new Octokit(options);
+      await newSyncingRepository(octokit);
       // launch listeners
       await Promise.all([
         launchSubmissionListener(),
