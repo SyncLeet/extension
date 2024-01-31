@@ -69,7 +69,10 @@ const launchMessageListener = async (octokit: Octokit) => {
           owner: user.login,
           repo: "LeetCode",
           path: file,
-          message: `:white_check_mark: ${titleSlug} [${runtimeDisplay}; ${memoryDisplay}]`,
+          message:
+            submissionDetails.totalCorrect == submissionDetails.totalTestcases
+              ? `:white_check_mark: ${titleSlug} [${runtimeDisplay}; ${memoryDisplay}]`
+              : `:x: ${titleSlug}`,
           content: btoa(submissionDetails.code),
         };
         // Update if file exists, create otherwise
