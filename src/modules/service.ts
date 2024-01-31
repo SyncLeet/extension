@@ -62,6 +62,8 @@ export const getSubmissionDetails = async (
               questionId
               titleSlug
             }
+            totalCorrect
+            totalTestcases
           }
         }
       `,

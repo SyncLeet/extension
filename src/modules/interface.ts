@@ -19,6 +19,8 @@ export interface SubmissionDetails {
     questionId: string;
     titleSlug: string;
   };
+  totalCorrect: number;
+  totalTestcases: number;
 }
 
 export interface QuestionDetails {
