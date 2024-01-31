@@ -2,7 +2,7 @@ import { Octokit, App } from "octokit";
 import { newOctokitOptions, newSyncingRepository } from "./modules/service";
 import { GraghQueryRequest } from "./modules/interface";
 import { Message } from "./modules/message";
-import { languageFileExtensions } from './languagesConfig';
+import { languageFileExtensions } from "./modules/constant";
 
 /**
  * React to LeetCode Activities
@@ -62,7 +62,9 @@ const launchMessageListener = async (octokit: Octokit) => {
         const { titleSlug } = submissionDetails.question;
         const { runtimeDisplay, memoryDisplay } = submissionDetails;
         const { difficulty } = questionDetails;
-        const fileExtension = languageFileExtensions[submissionDetails.lang.name] || languageFileExtensions.default;
+        const fileExtension =
+          languageFileExtensions[submissionDetails.lang.name] ||
+          languageFileExtensions.default;
         const file = `${difficulty}/${titleSlug}.${fileExtension}`;
         // Prepare payload with base64-encoded content
         const payload = {
