@@ -113,21 +113,32 @@ const webAuthFlowOptions = {
   interactive: true,
 };
 
-chrome.identity.launchWebAuthFlow(webAuthFlowOptions, async (responseURL) => {
-  const code = new URL(responseURL).searchParams.get("code");
-  switch (code) {
-    case null:
-      throw new Error("Failed to Retrieve Authorization Code");
-    default:
-      // prepare LeetSync
-      const options = await newOctokitOptions(code);
-      const octokit = new Octokit(options);
-      await newSyncingRepository(octokit);
-      // launch listeners
-      await Promise.all([
-        launchSubmissionListener(),
-        launchGraphQueryListener(),
-        launchMessageListener(octokit),
-      ]);
+const launchListeners = async (octokit: Octokit) => {
+  await newSyncingRepository(octokit);
+  launchSubmissionListener();
+  launchGraphQueryListener();
+  await launchMessageListener(octokit);
+};
+
+chrome.storage.local.get("options", async (items) => {
+  if (!items.options) {
+    chrome.identity.launchWebAuthFlow(
+      webAuthFlowOptions,
+      async (responseURL) => {
+        const code = new URL(responseURL).searchParams.get("code");
+        switch (code) {
+          case null:
+            throw new Error("Failed to Retrieve Authorization Code");
+          default:
+            const options = await newOctokitOptions(code);
+            await chrome.storage.local.set({ options });
+            const octokit = new Octokit(options);
+            await launchListeners(octokit);
+        }
+      }
+    );
+  } else {
+    const octokit = new Octokit(items.options);
+    await launchListeners(octokit);
   }
 });
