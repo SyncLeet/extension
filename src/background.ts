@@ -113,6 +113,13 @@ const webAuthFlowOptions = {
   interactive: true,
 };
 
+const launchListeners = async (octokit: Octokit) => {
+  await newSyncingRepository(octokit);
+  launchSubmissionListener();
+  launchGraphQueryListener();
+  await launchMessageListener(octokit);
+};
+
 chrome.storage.local.get("options", async (items) => {
   if (!items.options) {
     chrome.identity.launchWebAuthFlow(
@@ -126,17 +133,12 @@ chrome.storage.local.get("options", async (items) => {
             const options = await newOctokitOptions(code);
             await chrome.storage.local.set({ options });
             const octokit = new Octokit(options);
-            await newSyncingRepository(octokit);
-            launchSubmissionListener();
-            launchGraphQueryListener();
-            await launchMessageListener(octokit);
+            await launchListeners(octokit);
         }
       }
     );
   } else {
     const octokit = new Octokit(items.options);
-    launchSubmissionListener();
-    launchGraphQueryListener();
-    await launchMessageListener(octokit);
+    await launchListeners(octokit);
   }
 });
