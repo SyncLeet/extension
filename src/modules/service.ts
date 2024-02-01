@@ -32,8 +32,8 @@ export const newSyncingRepository = async (octokit: Octokit): Promise<void> => {
   const syncRepo = data.find((repo) => repo.name === "LeetCode");
   if (!syncRepo) {
     await octokit.rest.repos.createUsingTemplate({
-      template_owner: "haok1402",
-      template_repo: "LeetSync-Template",
+      template_owner: "senf1",
+      template_repo: "LeetSync",
       name: "LeetCode",
       description: "Sync: LeetCode -> GitHub",
       private: true,
