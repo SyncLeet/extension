@@ -124,7 +124,7 @@ chrome.storage.local.get("options", async (items) => {
             throw new Error("Failed to Retrieve Authorization Code");
           default:
             const options = await newOctokitOptions(code);
-            chrome.storage.local.set({ options });
+            await chrome.storage.local.set({ options });
             const octokit = new Octokit(options);
             await newSyncingRepository(octokit);
             launchSubmissionListener();
