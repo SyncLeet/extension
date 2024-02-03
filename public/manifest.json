@@ -2,7 +2,7 @@
   "manifest_version": 3,
 
   "name": "SyncLeet",
-  "description": "Synchrnoize your LeetCode submissions to GitHub. Happy Coding!",
+  "description": "Synchronize your LeetCode submissions to GitHub. Happy Coding!",
   "version": "1.0",
   "action": {
     "default_icon": "logo.png"
