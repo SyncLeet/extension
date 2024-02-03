@@ -1,4 +1,4 @@
-# LeetSync
+# SyncLeet
 
 ![Build Check](https://github.com/haok1402/LeetSync/actions/workflows/build-check.yml/badge.svg)
 
