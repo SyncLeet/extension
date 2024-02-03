@@ -18,4 +18,9 @@ export const extensionLookup = {
   racket: "rkt",
   erlang: "erl",
   elixir: "ex",
+  mysql: "sql",
+  mssql: "sql",
+  oraclesql: "sql",
+  pythondata: "py",
+  postgresql: "sql",
 };
