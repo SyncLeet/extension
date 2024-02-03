@@ -1,6 +1,6 @@
-# LeetSync
+# SyncLeet
 
-![Build Check](https://github.com/haok1402/LeetSync/actions/workflows/build-check.yml/badge.svg)
+![Build Check](https://github.com/haok1402/SyncLeet/actions/workflows/build-check.yml/badge.svg)
 
 Synchronize your LeetCode submissions to GitHub.
 
@@ -24,4 +24,4 @@ Synchronize your LeetCode submissions to GitHub.
 ### Caveats
 
 1. Note that yarn watch will not automatically reload the extension. You must manually reload the extension on the [chrome://extensions](chrome://extensions) page.
-2. LeetSync has not been tested or officially supported on Firefox. Contributions are welcome!
+2. SyncLeet has not been tested or officially supported on Firefox. Contributions are welcome!
