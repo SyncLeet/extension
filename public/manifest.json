@@ -1,9 +1,12 @@
 {
   "manifest_version": 3,
 
-  "name": "LeetSync",
-  "description": "Synchrnoize your LeetCode submissions to GitHub",
+  "name": "SyncLeet",
+  "description": "Synchrnoize your LeetCode submissions to GitHub. Happy Coding!",
   "version": "1.0",
+  "action": {
+    "default_icon": "logo.png"
+  },
 
   "permissions": ["webRequest", "storage", "identity"],
   "host_permissions": ["https://leetcode.com/*", "https://github.com/*"],

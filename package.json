@@ -1,7 +1,7 @@
 {
-  "name": "leetsync",
+  "name": "syncleet",
   "version": "1.0.0",
-  "repository": "https://github.com/haok1402/LeetSync.git",
+  "repository": "https://github.com/haok1402/SyncLeet.git",
   "license": "MIT",
   "scripts": {
     "build": "dotenv -- webpack",

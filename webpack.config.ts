@@ -33,7 +33,16 @@ const config: webpack.Configuration = {
       },
     }),
     new CopyPlugin({
-      patterns: [{ from: "public/manifest.json", to: "manifest.json" }],
+      patterns: [
+        {
+          from: "public/manifest.json",
+          to: "manifest.json",
+        },
+        {
+          from: "public/logo.png",
+          to: "logo.png",
+        },
+      ],
     }),
   ],
 };
