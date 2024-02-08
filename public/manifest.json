@@ -21,5 +21,7 @@
   "background": {
     "service_worker": "background.js",
     "type": "module"
-  }
+  },
+
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjoheGLIBmdE+rr8SE3SLj8U/F+obTZiLX21JUBFaULAXCR8NvIaISu3VWHm2tJFcbiLb2n9PgbVxOtU0IxtsCvxdrPtLl6G9JdsIzs3FJehahMOZPnQ0gO2OXOS0em3mYICTNHQXb2zyh2DDCwL4kIA9zlmG4c/dtM7rtlQ098usIudVevQEMBvkYk+Cn1ZSE+4TDFPboYpN+o5MDGjnW0Iu8eX4mjPspTtTjOIsuWhfdeN2czSnSr6WLaI/w4Hyuc0Xjk2xEZJ91q+UyD6nXEejAxsG0zSmMaWr+ZbncqusuWaajFKZgC7C2Pmnobdmx5DQ7ZWScwAfNvWVe2otWwIDAQAB"
 }
