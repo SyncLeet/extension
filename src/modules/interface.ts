@@ -24,5 +24,9 @@ export interface SubmissionDetails {
 }
 
 export interface QuestionDetails {
-  difficulty: string;
+  topicTags: [
+    {
+      slug: string;
+    }
+  ]
 }
