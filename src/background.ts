@@ -61,36 +61,38 @@ const launchMessageListener = async (octokit: Octokit) => {
         const { submissionDetails, questionDetails } = message.payload;
         const { titleSlug } = submissionDetails.question;
         const { runtimeDisplay, memoryDisplay } = submissionDetails;
-        const { difficulty } = questionDetails;
+        const { topicTags } = questionDetails;
         const extension = extensionLookup[submissionDetails.lang.name] || "";
-        const file = `${difficulty}/${titleSlug}.${extension}`;
-        // Prepare payload with base64-encoded content
-        const payload = {
-          owner: user.login,
-          repo: "LeetCode",
-          path: file,
-          message:
-            submissionDetails.totalCorrect == submissionDetails.totalTestcases
-              ? `:white_check_mark: ${titleSlug} [${runtimeDisplay}; ${memoryDisplay}]`
-              : `:x: ${titleSlug}`,
-          content: btoa(submissionDetails.code),
-        };
-        // Update if file exists, create otherwise
-        try {
-          const { data } = await octokit.rest.repos.getContent({
+        for (const tag of topicTags) {
+          const file = `${tag.slug}/${titleSlug}.${extension}`;
+          // Prepare payload with base64-encoded content
+          const payload = {
             owner: user.login,
             repo: "LeetCode",
             path: file,
-          });
-          switch (Array.isArray(data) ? data[0].type : data.type) {
-            case "file":
-              octokit.rest.repos.createOrUpdateFileContents({
-                ...payload,
-                sha: Array.isArray(data) ? data[0].sha : data.sha,
-              });
+            message:
+              submissionDetails.totalCorrect == submissionDetails.totalTestcases
+                ? `:white_check_mark: ${titleSlug} [${runtimeDisplay}; ${memoryDisplay}]`
+                : `:x: ${titleSlug}`,
+            content: btoa(submissionDetails.code),
+          };
+          // Update if file exists, create otherwise
+          try {
+            const { data } = await octokit.rest.repos.getContent({
+              owner: user.login,
+              repo: "LeetCode",
+              path: file,
+            });
+            switch (Array.isArray(data) ? data[0].type : data.type) {
+              case "file":
+                octokit.rest.repos.createOrUpdateFileContents({
+                  ...payload,
+                  sha: Array.isArray(data) ? data[0].sha : data.sha,
+                });
+            }
+          } catch (error) {
+            octokit.rest.repos.createOrUpdateFileContents(payload);
           }
-        } catch (error) {
-          octokit.rest.repos.createOrUpdateFileContents(payload);
         }
         break;
     }
