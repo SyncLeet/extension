@@ -92,14 +92,14 @@ export const getQuestionDetails = async (
     },
     body: JSON.stringify({
       query: `
-      query questionTitle($titleSlug: String!) {
-        question(titleSlug: $titleSlug) {
-          difficulty
-        }
+      query singleQuestionTopicTags($titleSlug: String!) { 
+        question(titleSlug: $titleSlug) { 
+          topicTags { slug } 
+        } 
       }
     `,
       variables: { titleSlug },
-      operationName: "questionTitle",
+      operationName: "singleQuestionTopicTags",
     }),
     method: "POST",
     mode: "cors",
