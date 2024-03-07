@@ -102,7 +102,7 @@ const launchMessageListener = async (octokit: Octokit) => {
           type: "basic",
           iconUrl: "logo.png",
           title: "SyncLeet",
-          message: `${title} was successfully synced to GitHub`,
+          message: `${title} was successfully synced!`,
         });
         break;
     }
