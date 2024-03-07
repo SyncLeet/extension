@@ -102,7 +102,7 @@ const launchMessageListener = async (octokit: Octokit) => {
           type: "basic",
           iconUrl: "logo.png",
           title: "SyncLeet",
-          message: `"${title}" synced to GitHub`,
+          message: `Question "${title}" synced to GitHub`,
         });
         break;
     }
