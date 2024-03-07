@@ -89,6 +89,14 @@ const launchMessageListener = async (octokit: Octokit) => {
                   ...payload,
                   sha: Array.isArray(data) ? data[0].sha : data.sha,
                 });
+                // Send notification after successful operation
+                const notificationID = 'syncSuccess-' + titleSlug + '-'+ Date.now();
+                chrome.notifications.create(notificationID, {
+                  type: 'basic',
+                  iconUrl: 'logo.png',
+                  title: 'SyncLeet',
+                  message: `${titleSlug} was successfully synchronized!`
+                });
             }
           } catch (error) {
             octokit.rest.repos.createOrUpdateFileContents(payload);
