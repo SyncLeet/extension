@@ -16,6 +16,7 @@ export interface SubmissionDetails {
     name: string;
   };
   question: {
+    title: string;
     questionId: string;
     titleSlug: string;
   };

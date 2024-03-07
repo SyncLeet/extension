@@ -59,6 +59,7 @@ export const getSubmissionDetails = async (
               name
             }
             question {
+              title
               questionId
               titleSlug
             }
