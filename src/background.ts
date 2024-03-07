@@ -59,7 +59,7 @@ const launchMessageListener = async (octokit: Octokit) => {
       case "responseDetails":
         // Extract details from message
         const { submissionDetails, questionDetails } = message.payload;
-        const { titleSlug } = submissionDetails.question;
+        const { titleSlug, title } = submissionDetails.question;
         const { runtimeDisplay, memoryDisplay } = submissionDetails;
         const { topicTags } = questionDetails;
         const extension = extensionLookup[submissionDetails.lang.name] || "";
@@ -89,19 +89,19 @@ const launchMessageListener = async (octokit: Octokit) => {
                   ...payload,
                   sha: Array.isArray(data) ? data[0].sha : data.sha,
                 });
-                // Send notification after successful operation
-                const notificationID = 'syncSuccess-' + titleSlug + '-'+ Date.now();
-                chrome.notifications.create(notificationID, {
-                  type: 'basic',
-                  iconUrl: 'logo.png',
-                  title: 'SyncLeet',
-                  message: `${titleSlug} was successfully synchronized!`
-                });
             }
           } catch (error) {
             octokit.rest.repos.createOrUpdateFileContents(payload);
           }
         }
+        // Send notification after successful operation
+        const notificationID = `${titleSlug}-${Date.now()}`
+        chrome.notifications.create(notificationID, {
+          type: "basic",
+          iconUrl: "logo.png",
+          title: "SyncLeet",
+          message: `"${title}" synced to GitHub`,
+        });
         break;
     }
     return true;
