@@ -75,7 +75,7 @@ const launchMessageListener = async (octokit: Octokit) => {
             owner: user.login,
             repo: "LeetCode",
             path: file,
-            message: `:ballot_box_with_check: ${titleSlug}; Runtime: ${runtimeDisplay}; Memory: ${memoryDisplay}]`,
+            message: `:ballot_box_with_check: ${titleSlug} [Runtime: ${runtimeDisplay}; Memory: ${memoryDisplay}]`,
             content: btoa(submissionDetails.code),
           };
           // Update if file exists, create otherwise
