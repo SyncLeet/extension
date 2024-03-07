@@ -63,6 +63,11 @@ const launchMessageListener = async (octokit: Octokit) => {
         const { runtimeDisplay, memoryDisplay } = submissionDetails;
         const { topicTags } = questionDetails;
         const extension = extensionLookup[submissionDetails.lang.name] || "";
+        // Check if the submission is successful
+        if (submissionDetails.totalCorrect != submissionDetails.totalTestcases) {
+          break;
+        }
+        // Sync to GitHub by topic tags
         for (const tag of topicTags) {
           const file = `${tag.slug}/${titleSlug}.${extension}`;
           // Prepare payload with base64-encoded content
@@ -70,10 +75,7 @@ const launchMessageListener = async (octokit: Octokit) => {
             owner: user.login,
             repo: "LeetCode",
             path: file,
-            message:
-              submissionDetails.totalCorrect == submissionDetails.totalTestcases
-                ? `:white_check_mark: ${titleSlug} [${runtimeDisplay}; ${memoryDisplay}]`
-                : `:x: ${titleSlug}`,
+            message: `:white_check_mark: ${titleSlug} [${runtimeDisplay}; ${memoryDisplay}]`,
             content: btoa(submissionDetails.code),
           };
           // Update if file exists, create otherwise
