@@ -36,7 +36,7 @@ export const newSyncingRepository = async (octokit: Octokit): Promise<void> => {
       template_repo: "template",
       name: "LeetCode",
       description: "Sync: LeetCode -> GitHub",
-      private: true,
+      private: false,
     });
   }
 };
