@@ -3,6 +3,7 @@ import { newOctokitOptions, newSyncingRepository } from "./modules/service";
 import { GraghQueryRequest } from "./modules/interface";
 import { Message } from "./modules/message";
 import { extensionLookup } from "./modules/constant";
+import { sendNotification } from './modules/notification';
 
 /**
  * React to LeetCode Activities
@@ -97,13 +98,7 @@ const launchMessageListener = async (octokit: Octokit) => {
           }
         }
         // Send notification after successful operation
-        const notificationID = `${titleSlug}-${Date.now()}`
-        chrome.notifications.create(notificationID, {
-          type: "basic",
-          iconUrl: "logo128.png",
-          title: "SyncLeet",
-          message: `${title} was successfully synced!`,
-        });
+        sendNotification(titleSlug, `${title} was successfully synced!`);
         break;
     }
     return true;
