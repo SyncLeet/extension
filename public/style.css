@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Jockey+One&display=swap');
+
+* {
+    background-color: #FFFFFF;
+    color: #101010;
+    margin: 0; 
+}
+
+body {
+    width: 323.6px;
+    height: 200px;
+    overflow: auto;
+    min-height: 200px;
+    background-image: url(texture.png);
+    background-position: center center;
+    background-attachment: fixed; 
+}
+
+header {
+    border-bottom: 1px solid rgba(0, 0, 0, .06);
+    padding: 20px 0 20px 24px;
+    font-family: 'Jockey One', sans-serif;
+}
+
+.logo {
+    border-radius: 5px;
+    width: 24px;
+    height: 24px;
+}
+
+.mb-0.ml-4 {
+    margin-left: 6px;
+}
+
+a {
+    text-decoration: none;
+}
+
+main {
+    min-height: 100px;
+}
+
+#container {
+    padding: 18px 0 0 24px;
+}
+
+.form-check-input[type="checkbox"] {
+    width: 40px;
+    height: 20px;
+    transition: all 0.3s;
+}
+
+.form-check-input[type="checkbox"]:checked {
+    background-color: #FFA115 !important;
+    border-color: #FFA115 !important;
+}
+
+.form-check-input[type="checkbox"]:checked::before {
+    left: calc(100% - 2px - 1rem);
+    transition: all 0.3s;
+}
+
+.form-check-input[type="checkbox"]::before {
+    width: 1rem;
+    height: 1rem;
+    background-color: #fff;
+    transition: all 0.3s;
+}
+
+footer {
+    border-top: 1px solid rgba(0, 0, 0, .06);
+    padding: 10px 0 20px 12px;
+}

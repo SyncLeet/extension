@@ -54,6 +54,18 @@ const config: webpack.Configuration = {
           from: "public/logo128.png",
           to: "logo128.png",
         },
+        {
+          from: "public/popup.html",
+          to: "popup.html",
+        },
+        {
+          from: "public/popup.js",
+          to: "popup.js",
+        },
+        {
+          from: "public/style.css",
+          to: "style.css",
+        },
       ],
     }),
   ],

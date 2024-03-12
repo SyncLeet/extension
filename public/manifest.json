@@ -4,6 +4,9 @@
   "name": "SyncLeet",
   "description": "🎉 Synchronize your LeetCode submissions to GitHub. Happy Coding! 🚀",
   "version": "1.0",
+  "action": {
+    "default_popup": "popup.html"
+  },
 
   "icons": {
     "16": "logo16.png",
