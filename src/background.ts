@@ -100,7 +100,7 @@ const launchMessageListener = async (octokit: Octokit) => {
         const notificationID = `${titleSlug}-${Date.now()}`
         chrome.notifications.create(notificationID, {
           type: "basic",
-          iconUrl: "logo.png",
+          iconUrl: "logo128.png",
           title: "SyncLeet",
           message: `${title} was successfully synced!`,
         });
