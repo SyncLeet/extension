@@ -38,22 +38,7 @@ const config: webpack.Configuration = {
           from: "public/manifest.json",
           to: "manifest.json",
         },
-        {
-          from: "public/logo16.png",
-          to: "logo16.png",
-        },
-        {
-          from: "public/logo32.png",
-          to: "logo32.png",
-        },
-        {
-          from: "public/logo48.png",
-          to: "logo48.png",
-        },
-        {
-          from: "public/logo128.png",
-          to: "logo128.png",
-        },
+        { from: 'public/*.png', to: '[name][ext]' },
         {
           from: "public/popup.html",
           to: "popup.html",
