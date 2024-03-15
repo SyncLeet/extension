@@ -15,7 +15,7 @@ const config: webpack.Configuration = {
     popup: path.resolve(sourceFolder, "popup.ts"),
   },
   output: {
-    filename: "scripts/[name].js",
+    filename: "script/[name].js",
     path: buildFolder,
     clean: true,
   },

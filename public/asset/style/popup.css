@@ -41,14 +41,15 @@ svg {
     margin-left: 4px;
 }
 
-.logo {
-    border-radius: 5px;
-    width: 24px;
-    height: 24px;
+.brand-logo {
+    border-radius: 0.25rem;
+    width: 1.5rem;
 }
 
-.mb-0.ml-4 {
-    margin-left: 6px;
+.brand-name {
+    margin-left: 0.5rem;
+    font-family: 'Jockey One';
+    font-weight: bold;
 }
 
 a {
