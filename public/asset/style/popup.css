@@ -27,14 +27,18 @@ body {
     height: 200px;
     overflow: auto;
     min-height: 200px;
-    background-position: center center;
-    background-attachment: fixed; 
 }
 
 header {
     border-bottom: 1px solid rgba(0, 0, 0, .06);
     padding: 20px 0 20px 24px;
     font-family: 'Jockey One', sans-serif;
+}
+
+svg {
+    width: 18px;
+    height: 18px;
+    margin-left: 4px;
 }
 
 .logo {
