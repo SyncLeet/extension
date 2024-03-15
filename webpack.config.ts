@@ -3,14 +3,20 @@ import webpack from "webpack";
 import CopyPlugin from "copy-webpack-plugin";
 import { DefinePlugin } from "webpack";
 
+const sourceFolder = path.resolve(__dirname, "src");
+const publicFolder = path.resolve(__dirname, "public");
+const buildFolder = path.resolve(__dirname, "dist");
+
 const config: webpack.Configuration = {
   mode: "production",
   entry: {
-    foreground: path.resolve(__dirname, "src/foreground.ts"),
-    background: path.resolve(__dirname, "src/background.ts"),
+    foreground: path.resolve(sourceFolder, "foreground.ts"),
+    background: path.resolve(sourceFolder, "background.ts"),
+    popup: path.resolve(sourceFolder, "popup.ts"),
   },
   output: {
-    path: path.resolve(__dirname, "dist"),
+    filename: "script/[name].js",
+    path: buildFolder,
     clean: true,
   },
   resolve: {
@@ -33,16 +39,7 @@ const config: webpack.Configuration = {
       },
     }),
     new CopyPlugin({
-      patterns: [
-        {
-          from: "public/manifest.json",
-          to: "manifest.json",
-        },
-        {
-          from: "public/logo.png",
-          to: "logo.png",
-        },
-      ],
+      patterns: [{ from: publicFolder, to: buildFolder }],
     }),
   ],
 };
