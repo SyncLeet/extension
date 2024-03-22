@@ -1,5 +1,5 @@
 import { Octokit } from "octokit";
-import { newOctokitOptions, newSyncingRepository } from "./modules/service";
+import { newOctokitOptions, newSyncingRepository, createAutolinkReference } from "./modules/service";
 import { GraghQueryRequest } from "./modules/interface";
 import { Message } from "./modules/message";
 import { extensionLookup } from "./modules/constant";
@@ -76,7 +76,7 @@ const launchMessageListener = async (octokit: Octokit) => {
             owner: user.login,
             repo: "LeetCode",
             path: file,
-            message: `:ballot_box_with_check: ${titleSlug} [Runtime: ${runtimeDisplay}; Memory: ${memoryDisplay}]`,
+            message: `LC-${titleSlug} [Runtime: ${runtimeDisplay}; Memory: ${memoryDisplay}]`,
             content: btoa(submissionDetails.code),
           };
           // Update if file exists, create otherwise
@@ -122,6 +122,7 @@ const webAuthFlowOptions = {
 
 const launchListeners = async (octokit: Octokit) => {
   await newSyncingRepository(octokit);
+  await createAutolinkReference(octokit);
   launchSubmissionListener();
   launchGraphQueryListener();
   await launchMessageListener(octokit);
