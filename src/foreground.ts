@@ -1,19 +1,11 @@
-import { Message } from "./modules/message";
-import { getQuestionDetails, getSubmissionDetails } from "./modules/service";
+import { errorReport } from "src/modules/report";
+import { initializeForeground as leetcodeInitialize } from "src/modules/leetcode";
 
-chrome.runtime.onMessage.addListener(async (message: Message) => {
-  switch (message.type) {
-    case "requestDetails":
-      // Retrieve details from LeetCode
-      const { id: submissionId } = message.payload;
-      const submissionDetails = await getSubmissionDetails(submissionId);
-      const { titleSlug } = submissionDetails.question;
-      const questionDetails = await getQuestionDetails(titleSlug);
-      // Send details to background for sync with GitHub
-      chrome.runtime.sendMessage({
-        type: "responseDetails",
-        payload: { submissionDetails, questionDetails },
-      });
-  }
-  return true;
-});
+try {
+  leetcodeInitialize();
+} catch (error) {
+  errorReport({
+    message: error.message,
+    context: "foreground",
+  });
+}

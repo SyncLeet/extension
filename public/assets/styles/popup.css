@@ -1,0 +1,96 @@
+@font-face {
+  font-family: "Jockey One";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(asset/font/HTxpL2g2KjCFj4x8WI6AnI_xHLOk.woff2) format("woff2");
+  unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Jockey One";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(asset/font/HTxpL2g2KjCFj4x8WI6AnIHxHA.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+* {
+  background-color: #ffffff;
+  color: #101010;
+  margin: 0;
+}
+
+body {
+  width: 323.6px;
+  height: 200px;
+  overflow: auto;
+  min-height: 200px;
+}
+
+header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 20px 0 20px 24px;
+  font-family: "Jockey One", sans-serif;
+}
+
+svg {
+  width: 18px;
+  height: 18px;
+  margin-left: 4px;
+}
+
+.brand-logo {
+  border-radius: 0.25rem;
+  width: 1.5rem;
+}
+
+.brand-name {
+  margin-left: 0.5rem;
+  font-family: "Jockey One";
+  font-weight: bold;
+}
+
+a {
+  text-decoration: none;
+}
+
+main {
+  min-height: 100px;
+}
+
+#container {
+  padding: 18px 0 0 24px;
+}
+
+.form-check-input[type="checkbox"] {
+  width: 40px;
+  height: 20px;
+  transition: all 0.3s;
+}
+
+.form-check-input[type="checkbox"]:checked {
+  background-color: #ffa115 !important;
+  border-color: #ffa115 !important;
+}
+
+.form-check-input[type="checkbox"]:checked::before {
+  left: calc(100% - 2px - 1rem);
+  transition: all 0.3s;
+}
+
+.form-check-input[type="checkbox"]::before {
+  width: 1rem;
+  height: 1rem;
+  background-color: #fff;
+  transition: all 0.3s;
+}
+
+footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 10px 0 20px 12px;
+}
