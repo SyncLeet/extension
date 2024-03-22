@@ -41,6 +41,41 @@ export const newSyncingRepository = async (octokit: Octokit): Promise<void> => {
   }
 };
 
+export const createAutolinkReference = async (octokit: Octokit): Promise<void> => {
+  const { data } = await octokit.rest.repos.listForAuthenticatedUser();
+  const syncRepo = data.find((repo) => repo.name === "LeetCode");
+  if (syncRepo) {
+    try {
+      const { data: autolinks } = await octokit.rest.repos.listAutolinks({
+        owner: syncRepo.owner.login,
+        repo: syncRepo.name,
+      });
+
+      const existingAutolink = autolinks.find((autolink) => autolink.key_prefix === 'LC-');
+
+      if (!existingAutolink) {
+        await octokit.rest.repos.createAutolink({
+          owner: syncRepo.owner.login,
+          repo: syncRepo.name,
+          key_prefix: 'LC-',
+          url_template: 'https://leetcode.com/problems/<num>/description/',
+          is_alphanumeric: true,
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28'
+          }
+        });
+        console.log('Autolink reference created successfully');
+      } else {
+        console.log('Autolink reference already exists');
+      }
+    } catch (error) {
+      throw new Error(`Failed to create autolink reference: ${error}`);
+    }
+  } else {
+    console.log('Repository not found');
+  }
+};
+
 export const getSubmissionDetails = async (
   submissionId: number
 ): Promise<SubmissionDetails> => {
