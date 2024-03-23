@@ -223,8 +223,8 @@ export const initializeBackground = async (octokit: Octokit): Promise<void> => {
         }
         const commitMessage = [
           `:ballot_box_with_check: LC-${details.question.titleSlug}`,
-          `${details.runtimeDisplay}, ${details.memoryDisplay}`,
-        ].join(" | ");
+          `[${details.runtimeDisplay}, ${details.memoryDisplay}]`,
+        ].join(" ");
         await commitSubmissions(octokit, payload, commitMessage);
         const values = await chrome.storage.sync.get("shouldNotify");
         if (values.shouldNotify) {

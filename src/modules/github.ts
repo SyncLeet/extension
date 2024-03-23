@@ -22,7 +22,7 @@ const requestIdentity = async (): Promise<string> => {
 
   if (!process.env.CLIENT_SECRET) {
     await errorReport({
-      message: "CLIENT_ID not set",
+      message: "CLIENT_SECRET not set",
       context: "github.requestIdentity",
     });
   }
