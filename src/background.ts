@@ -1,14 +1,11 @@
-import { errorReport } from "src/modules/report";
 import { initializeBackground as githubInitialize } from "src/modules/github";
 import { initializeBackground as leetcodeInitialize } from "src/modules/leetcode";
 
-try {
+chrome.tabs.query({ url: "https://leetcode.com/*" }, (tabs) => {
+  for (const tab of tabs) {
+    chrome.tabs.reload(tab.id);
+  }
   githubInitialize().then((octokit) => {
     leetcodeInitialize(octokit);
   });
-} catch (error) {
-  errorReport({
-    message: error.message,
-    context: "background",
-  });
-}
+});

@@ -174,11 +174,6 @@ export const initializeBackground = async (octokit: Octokit): Promise<void> => {
     context: "leetcode.initializeBackground",
   });
 
-  const tabs = await chrome.tabs.query({ url: "https://leetcode.com/*" });
-  for (const tab of tabs) {
-    chrome.tabs.reload(tab.id);
-  }
-
   chrome.webRequest.onBeforeRequest.addListener(
     (details) => {
       const match = details.url.match(/detail\/(.*?)\/check/);
