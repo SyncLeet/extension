@@ -1,26 +1,30 @@
-import path from "path";
-import webpack from "webpack";
+import "dotenv/config";
+import { resolve } from "path";
+import { Configuration } from "webpack";
+import { EnvironmentPlugin } from "webpack";
 import CopyPlugin from "copy-webpack-plugin";
-import { DefinePlugin } from "webpack";
 
-const sourceFolder = path.resolve(__dirname, "src");
-const publicFolder = path.resolve(__dirname, "public");
-const buildFolder = path.resolve(__dirname, "dist");
+const srcDir = resolve(__dirname, "src");
+const distDir = resolve(__dirname, "dist");
+const publicDir = resolve(__dirname, "public");
 
-const config: webpack.Configuration = {
+const config: Configuration = {
   mode: "production",
   entry: {
-    foreground: path.resolve(sourceFolder, "foreground.ts"),
-    background: path.resolve(sourceFolder, "background.ts"),
-    popup: path.resolve(sourceFolder, "popup.ts"),
+    foreground: resolve(srcDir, "foreground.ts"),
+    background: resolve(srcDir, "background.ts"),
+    popup: resolve(srcDir, "popup.ts"),
   },
   output: {
-    filename: "script/[name].js",
-    path: buildFolder,
+    path: distDir,
+    filename: "scripts/[name].js",
     clean: true,
   },
   resolve: {
     extensions: [".ts", ".js"],
+    alias: {
+      src: srcDir,
+    },
   },
   module: {
     rules: [
@@ -32,14 +36,12 @@ const config: webpack.Configuration = {
     ],
   },
   plugins: [
-    new DefinePlugin({
-      "process.env": {
-        CLIENT_ID: JSON.stringify(process.env.CLIENT_ID),
-        CLIENT_SECRET: JSON.stringify(process.env.CLIENT_SECRET),
-      },
+    new EnvironmentPlugin({
+      CLIENT_ID: JSON.stringify(process.env.CLIENT_ID),
+      CLIENT_SECRET: JSON.stringify(process.env.CLIENT_SECRET),
     }),
     new CopyPlugin({
-      patterns: [{ from: publicFolder, to: buildFolder }],
+      patterns: [{ from: publicDir, to: distDir }],
     }),
   ],
 };
