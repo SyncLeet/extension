@@ -180,10 +180,6 @@ const createAutolinks = async (octokit: Octokit): Promise<void> => {
       });
       autolink = autolinks.find((link) => link.key_prefix === "LC-");
     }
-    await notifyReport({
-      message: "Created autolinks with LeetCode!",
-      context: "github.createAutolinks",
-    });
   }
 };
 
@@ -193,6 +189,9 @@ const createAutolinks = async (octokit: Octokit): Promise<void> => {
  * @param {FileToCommit[]} payload
  *
  * Adapted from: https://paul.kinlan.me/creating-a-commit-with-multiple-files-to-github-with-js-on-the-web/
+ *
+ * Note that the latest commit might take a while to reflect with GitHub's API, so we
+ * store the latest 25 commits in local storage for merging purposes.
  */
 export const commitSubmissions = async (
   octokit: Octokit,
@@ -231,6 +230,12 @@ export const commitSubmissions = async (
     })
   );
 
+  const storage = await chrome.storage.local.get("github.parents");
+  const parents: string[] = storage["github.parents"] || [];
+  if (!parents.includes(mainRef.data.object.sha)) {
+    parents.push(mainRef.data.object.sha);
+  }
+
   const tree = await octokit.rest.git.createTree({
     owner,
     repo: "LeetCode",
@@ -243,8 +248,14 @@ export const commitSubmissions = async (
     repo: "LeetCode",
     message,
     tree: tree.data.sha,
-    parents: [mainRef.data.object.sha],
+    parents: parents,
   });
+
+  parents.push(commit.data.sha);
+  if (parents.length > 25) {
+    parents.shift();
+  }
+  await chrome.storage.local.set({ "github.parents": parents });
 
   await octokit.rest.git.updateRef({
     owner,

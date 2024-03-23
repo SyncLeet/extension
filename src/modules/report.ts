@@ -9,7 +9,7 @@ const append = async (payload: Report): Promise<void> => {
   const history: Report[] = values["report.history"] || [];
 
   history.push(payload);
-  if (history.length > 100) {
+  if (history.length > 25) {
     history.shift();
   }
 
