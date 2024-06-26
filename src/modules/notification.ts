@@ -4,7 +4,7 @@ export function sendNotification(titleSlug: string, message: string): void {
             const notificationID = `${titleSlug}-${Date.now()}`
             chrome.notifications.create(notificationID, {
                 type: "basic",
-                iconUrl: "logo128.png",
+                iconUrl: "../asset/image/logo_128.png",
                 title: "SyncLeet",
                 message: message,
             });
