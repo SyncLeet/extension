@@ -1,5 +1,5 @@
 import { Octokit } from "octokit";
-import { newOctokitOptions, newSyncingRepository, createAutolinkReference } from "./modules/service";
+import { newOctokitOptions, newSyncingRepository, createAutolinkReference, fetchAllSubmissions } from "./modules/service";
 import { GraghQueryRequest } from "./modules/interface";
 import { Message } from "./modules/message";
 import { extensionLookup } from "./modules/constant";
@@ -104,6 +104,20 @@ const launchMessageListener = async (octokit: Octokit) => {
     return true;
   });
 };
+
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+  if (request.action === "fetchAllHistory") {
+    console.log("Fetching all histories");
+    try {
+      const data = await fetchAllSubmissions();
+      console.log("Fetched submissions:", data);
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
+      sendResponse({ error: "Failed to fetch histories" });
+    }
+    return true;
+  }
+});
 
 /**
  * Handle OAuth2 flow with GitHub

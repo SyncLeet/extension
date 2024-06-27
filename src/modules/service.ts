@@ -1,5 +1,5 @@
 import { Octokit } from "octokit";
-import { QuestionDetails, SubmissionDetails } from "./interface";
+import { QuestionDetails, SubmissionDetails, Submission, SubmissionsResponse } from "./interface";
 
 export const newOctokitOptions = async (
   code: string
@@ -149,3 +149,45 @@ export const getQuestionDetails = async (
   const { data } = await response.json();
   return data.question;
 };
+
+export async function fetchAllSubmissions(offset: number = 0, limit: number = 20, lastKey: string = ''): Promise<any[]> {
+  let allSubmissions: Submission[] = [];
+  let hasNext = true;
+
+  try {
+    while (hasNext) {
+      const baseUrl = `https://leetcode.com/api/submissions/?offset=${offset}&limit=${limit}`;
+      let url = lastKey ? `${baseUrl}&lastkey=${lastKey}` : baseUrl;
+      console.log('Fetching submissions:', url);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: SubmissionsResponse = await response.json();
+      allSubmissions = allSubmissions.concat(data.submissions_dump || []);
+      console.log('Fetched submissions:', data.submissions_dump);
+
+      hasNext = data.has_next;
+      if (hasNext) {
+        // Prepare for the next iteration
+        offset += limit;
+        lastKey = data.last_key;
+        // Wait for 1 second before making the next call to avoid hitting rate limits
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    return allSubmissions;
+  } catch (error) {
+    console.error("Failed to fetch submission details:", error);
+    throw error;
+  }
+}
