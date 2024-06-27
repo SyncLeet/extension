@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function (): void {
+  // notificationStatus
   let checkbox = document.getElementById(
     "notificationStatus"
   ) as HTMLInputElement;
@@ -13,4 +14,17 @@ document.addEventListener("DOMContentLoaded", function (): void {
   checkbox.addEventListener("change", function (): void {
     chrome.storage.sync.set({ notificationStatus: this.checked });
   });
+
+  // fetchAllHistoriesBtn
+  const button = document.getElementById(
+    "fetchAllHistoriesBtn"
+  ) as HTMLInputElement;
+
+  if (button) {
+    button.addEventListener('click', () => {
+      chrome.runtime.sendMessage({ action: "fetchAllHistory" });
+    });
+  } else {
+    console.error("Button not found");
+  }
 });
