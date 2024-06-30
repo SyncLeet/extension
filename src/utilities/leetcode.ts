@@ -311,9 +311,11 @@ export const fetchAllSubmissionHistory = async (): Promise<
     // Fetch submission details for each question in the chunk
     const submissionDetailsPromises = chunk.map(async (item) => {
       const questionSlug = item.question.titleSlug;
-      const lastAcceptedSubmission = await fetchLastAccepted(questionSlug);
-      console.log(questionSlug, lastAcceptedSubmission.id);
-      return fetchSubmissionDetails(lastAcceptedSubmission.id);
+      const lastAccepted = await fetchLastAccepted(questionSlug);
+      const details = await fetchSubmissionDetails(lastAccepted.id);
+      console.log(questionSlug, item.question.topicTags);
+      console.log(lastAccepted.id, details.code);
+      return details;
     });
 
     // Wait for all submission details promises to resolve
