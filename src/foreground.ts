@@ -2,6 +2,9 @@ import { Message } from "./utilities/message";
 import { extensionLookup } from "./utilities/leetcode";
 import { fetchSubmissionDetails } from "./utilities/leetcode";
 import { fetchQuestionDetails } from "./utilities/leetcode";
+import { fetchAllSubmissionHistory } from "./utilities/leetcode";
+
+fetchAllSubmissionHistory().then(console.dir);
 
 const runMain = async () => {
   chrome.runtime.onMessage.addListener(async (request: Message) => {
@@ -11,10 +14,12 @@ const runMain = async () => {
         const submission = await fetchSubmissionDetails(params.submissionId);
         const { titleSlug, title } = submission.question;
         const question = await fetchQuestionDetails(titleSlug);
+        // Only push to GitHub if all testcases pass
         if (submission.totalCorrect === submission.totalTestcases) {
           const { runtimeDisplay, memoryDisplay } = submission;
           const message = `LC-${titleSlug} [Runtime: ${runtimeDisplay}; Memory: ${memoryDisplay}]`;
           const changes: { path: string; content: string }[] = [];
+          // Group by topic tags and push to corresponding directories
           for (const { slug: topicSlug } of question.topicTags) {
             const suffix = extensionLookup[submission.lang.name];
             changes.push({
@@ -22,6 +27,7 @@ const runMain = async () => {
               content: submission.code,
             });
           }
+          // Let the background script handle the actual commit, and notify the user
           chrome.runtime.sendMessage({
             action: "commitFiles",
             params: { message, changes },
@@ -40,6 +46,7 @@ const runMain = async () => {
   });
 };
 
+// Error handler function
 const onError = (error: Error) => {
   chrome.runtime.sendMessage({
     action: "createNotifications",
@@ -52,4 +59,5 @@ const onError = (error: Error) => {
   console.error(error);
 };
 
+// Run the main function and handle errors
 runMain().catch(onError);
