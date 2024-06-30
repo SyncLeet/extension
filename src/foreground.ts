@@ -2,9 +2,6 @@ import { Message } from "./utilities/message";
 import { extensionLookup } from "./utilities/leetcode";
 import { fetchSubmissionDetails } from "./utilities/leetcode";
 import { fetchQuestionDetails } from "./utilities/leetcode";
-import { fetchAllSubmissionHistory } from "./utilities/leetcode";
-
-fetchAllSubmissionHistory().then(console.dir);
 
 const runMain = async () => {
   chrome.runtime.onMessage.addListener(async (request: Message) => {
