@@ -1,7 +1,8 @@
 import { newOctokit, commitFiles } from "./utilities/github";
 import { Message } from "./utilities/message";
 
-const runGitHubHandler = async () => {
+const runMain = async () => {
+  // Listen for messages from the content script to commit files and create notifications
   const octokit = await newOctokit();
   chrome.runtime.onMessage.addListener(async (request: Message) => {
     switch (request.action) {
@@ -23,9 +24,7 @@ const runGitHubHandler = async () => {
     }
     return true;
   });
-};
-
-const runLeetCodeHandler = async () => {
+  // Listen for periodic submission checks to capture submission IDs
   const submitted = new Set<number>();
   chrome.webRequest.onBeforeRequest.addListener(
     (details) => {
@@ -34,6 +33,7 @@ const runLeetCodeHandler = async () => {
     },
     { urls: ["https://leetcode.com/submissions/detail/*/check/"] }
   );
+  // Listen for the first GraphQL request to fetch submission details, that is when check is complete
   chrome.webRequest.onBeforeRequest.addListener(
     (details) => {
       const encoded = details.requestBody.raw[0].bytes;
@@ -55,11 +55,7 @@ const runLeetCodeHandler = async () => {
   );
 };
 
-const runMain = async () => {
-  await runGitHubHandler();
-  await runLeetCodeHandler();
-};
-
+// Error handler function
 const onError = (error: Error) => {
   chrome.notifications.create({
     type: "basic",
@@ -71,4 +67,5 @@ const onError = (error: Error) => {
   console.error(error);
 };
 
+// Run the main function and handle errors
 runMain().catch(onError);
