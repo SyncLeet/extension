@@ -1,20 +1,20 @@
 import { fetchAllSubmissionHistory } from "./utilities/leetcode";
 
 document.addEventListener("DOMContentLoaded", function (): void {
-  // notificationStatus
+  // shouldNotify
   let checkbox = document.getElementById(
-    "notificationStatus"
+    "shouldNotify"
   ) as HTMLInputElement;
 
   chrome.storage.sync.get(
-    "notificationStatus",
-    function (data: { notificationStatus: boolean }): void {
-      checkbox.checked = data.notificationStatus;
+    "shouldNotify",
+    function (data: { shouldNotify: boolean }): void {
+      checkbox.checked = data.shouldNotify;
     }
   );
 
   checkbox.addEventListener("change", function (): void {
-    chrome.storage.sync.set({ notificationStatus: this.checked });
+    chrome.storage.sync.set({ shouldNotify: this.checked });
   });
 
   // fetchAllHistoriesBtn

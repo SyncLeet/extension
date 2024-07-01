@@ -1,24 +1,33 @@
-import { newOctokit, commitFiles } from "./utilities/github";
+import { newOctokit, commitFiles, newRepository } from "./utilities/github";
 import { Message } from "./utilities/message";
 
 const runMain = async () => {
-  // Listen for messages from the content script to commit files and create notifications
   const octokit = await newOctokit();
+  await newRepository(octokit);
   chrome.runtime.onMessage.addListener(async (request: Message) => {
     switch (request.action) {
+      // Listen for messages from the content script to commit files
       case "commitFiles": {
         const { message, changes } = request.params;
         await commitFiles(octokit, message, changes);
         break;
       }
+      // Listen for messages from the content script to create notifications
       case "createNotifications": {
-        const { title, message } = request.params;
-        chrome.notifications.create({
-          type: "basic",
-          iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
-          title,
-          message,
+        const shouldNotify = await new Promise<boolean>((resolve) => {
+          chrome.storage.local.get("shouldNotify", (result) => {
+            resolve(result.shouldNotify);
+          });
         });
+        if (shouldNotify) {
+          const { title, message } = request.params;
+          chrome.notifications.create({
+            type: "basic",
+            iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
+            title,
+            message,
+          });
+        }
         break;
       }
     }

@@ -70,6 +70,54 @@ export const newOctokit = async (): Promise<Octokit> => {
 };
 
 /**
+ * Creates a new repository named "LeetCode" if it doesn't already exist.
+ * The repository is created using a template repository and includes autolinks for LeetCode problems.
+ *
+ * @param octokit - The Octokit instance used for making API requests.
+ * @returns A Promise that resolves when the repository and autolinks are created.
+ */
+export const newRepository = async (octokit: Octokit) => {
+  // Check if the repository already exists
+  const { data } = await octokit.rest.repos.listForAuthenticatedUser();
+  if (data.find((repo) => repo.name === "LeetCode")) {
+    return;
+  }
+  // Create the repository using a template
+  await octokit.rest.repos.createUsingTemplate({
+    template_owner: "SyncLeet",
+    template_repo: "template",
+    name: "LeetCode",
+    description: "Sync: LeetCode -> GitHub",
+    private: false,
+  });
+  // Wait for the repository to be created
+  while (true) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    console.log("Checking if repository is created...");
+    const { data } = await octokit.rest.repos.listForAuthenticatedUser();
+    const repository = data.find((repo) => repo.name === "LeetCode");
+    if (repository) {
+      // Check if autolinks for LeetCode problems already exist
+      const { data } = await octokit.rest.repos.listAutolinks({
+        owner: repository.owner.login,
+        repo: repository.name,
+      });
+      if (data.find((link) => link.key_prefix === "LC-")) {
+        break;
+      }
+      // Create autolinks for LeetCode problems
+      await octokit.rest.repos.createAutolink({
+        owner: repository.owner.login,
+        repo: repository.name,
+        key_prefix: "LC-",
+        url_template: "https://leetcode.com/problems/<num>/description/",
+        is_alphanumeric: true,
+      });
+    }
+  }
+};
+
+/**
  * Commits the specified changes to the "main" branch of the LeetCode repository.
  *
  * @param octokit - The Octokit instance used for making API requests.
@@ -111,11 +159,23 @@ export const commitFiles = async (
       content: file.content,
     })),
   });
-  // Fetch githubCommits from local chrome storage
-  const githubCommits = await new Promise<string[]>((resolve) => {
-    chrome.storage.local.get("githubCommits", (result) => {
-      resolve(result.githubCommits || []);
-    });
+
+  // Fetch the githubCommits from local storage
+  const githubCommits = await new Promise<{ [time: number]: string }>(
+    (resolve) => {
+      chrome.storage.local.get("githubCommits", (result) => {
+        resolve(result.githubCommits || {});
+      });
+    }
+  );
+
+  // Delete commits that are 30 seconds old
+  const currentTime = Date.now();
+  Object.keys(githubCommits).forEach((time) => {
+    const commitTime = parseInt(time);
+    if (currentTime - commitTime >= 60 * 1000) {
+      delete githubCommits[commitTime];
+    }
   });
 
   // Create a new commit with the updated tree
@@ -124,7 +184,7 @@ export const commitFiles = async (
     repo: "LeetCode",
     message,
     tree: newTree.data.sha,
-    parents: [...githubCommits, latestCommit.data.sha],
+    parents: [...Object.values(githubCommits), latestCommit.data.sha],
   });
 
   // Update the "main" branch reference to point to the new commit
@@ -135,12 +195,9 @@ export const commitFiles = async (
     sha: newCommit.data.sha,
   });
 
-  // Add the newCommit sha to githubCommits
-  githubCommits.push(newCommit.data.sha);
-  if (githubCommits.length > 8) {
-    githubCommits.shift();
-  }
+  // Record newCommit to githubCommits with the timestamp
+  githubCommits[Date.now()] = newCommit.data.sha;
 
-  // Store the updated githubCommits in local chrome storage
+  // Store the updated githubCommits in local storage
   chrome.storage.local.set({ githubCommits });
 };

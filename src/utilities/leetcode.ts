@@ -313,14 +313,18 @@ export const fetchAllSubmissionHistory = async (): Promise<
       const questionSlug = item.question.titleSlug;
       const lastAccepted = await fetchLastAccepted(questionSlug);
       const details = await fetchSubmissionDetails(lastAccepted.id);
-      console.log(questionSlug, item.question.topicTags);
-      console.log(lastAccepted.id, details.code);
       return details;
     });
 
     // Wait for all submission details promises to resolve
     const chunkSubmissionDetails = await Promise.all(submissionDetailsPromises);
     submissionDetails.push(...chunkSubmissionDetails);
+
+    console.log(
+      `Progress: ${((i + 5) / progressList.length) * 100}% (${i + 5}/${
+        progressList.length
+      })`
+    );
 
     // Add a delay of 3 seconds before processing the next chunk
     await new Promise((resolve) => setTimeout(resolve, 3000));
