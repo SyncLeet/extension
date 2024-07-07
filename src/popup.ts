@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", initialize);
 function initialize(): void {
   setupCheckbox();
   setupButton();
+  continueCountdownIfNeeded();
 }
 
 // Setup checkbox functionality
@@ -187,19 +188,45 @@ function updateProgressBar(progressContainer: HTMLDivElement, progress: number):
   }
 }
 
+function updateButtonAndStorage(button: HTMLInputElement, originalButtonText: string, countdown: number): void {
+  button.textContent = `${originalButtonText} (${countdown}s)`;
+  chrome.storage.local.set({ countdown: countdown });
+}
+
 // Start countdown
 function startCountdown(button: HTMLInputElement, originalButtonText: string): void {
-  let countdown = 60; // in seconds
-  button.disabled = true;
-  const countdownInterval = setInterval(() => {
-    button.textContent = `${originalButtonText} (${countdown}s)`;
-    countdown -= 1;
-    if (countdown <= 0) {
-      clearInterval(countdownInterval);
-      button.textContent = originalButtonText;
-      button.disabled = false;
+  // Check local storage for an existing countdown
+  chrome.storage.local.get(['countdown'], (result) => {
+    let countdown = result.countdown || 60; // Use existing countdown or default to 60 seconds
+
+    button.disabled = true;
+    updateButtonAndStorage(button, originalButtonText, countdown);
+
+    const countdownInterval = setInterval(() => {
+      countdown -= 1;
+      updateButtonAndStorage(button, originalButtonText, countdown);
+
+      if (countdown <= 0) {
+        clearInterval(countdownInterval);
+        chrome.storage.local.remove(['countdown'], () => {
+          button.textContent = originalButtonText;
+          button.disabled = false;
+        });
+      }
+    }, 1000);
+  });
+}
+
+// Function to continue countdown if needed
+function continueCountdownIfNeeded(): void {
+  const button = document.getElementById("fetchAllHistoriesBtn") as HTMLInputElement;
+  const originalButtonText = button.textContent || "Fetch All Histories"; // Default text or fetch from a more reliable source
+
+  chrome.storage.local.get(['countdown'], (result) => {
+    if (result.countdown) {
+      startCountdown(button, originalButtonText);
     }
-  }, 1000);
+  });
 }
 
 // Handle error
