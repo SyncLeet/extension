@@ -188,43 +188,49 @@ function updateProgressBar(progressContainer: HTMLDivElement, progress: number):
   }
 }
 
-function updateButtonAndStorage(button: HTMLInputElement, originalButtonText: string, countdown: number): void {
-  button.textContent = `${originalButtonText} (${countdown}s)`;
-  chrome.storage.local.set({ countdown: countdown });
-}
-
 // Start countdown
 function startCountdown(button: HTMLInputElement, originalButtonText: string): void {
-  // Check local storage for an existing countdown
-  chrome.storage.local.get(['countdown'], (result) => {
-    let countdown = result.countdown || 60; // Use existing countdown or default to 60 seconds
-
-    button.disabled = true;
-    updateButtonAndStorage(button, originalButtonText, countdown);
-
-    const countdownInterval = setInterval(() => {
-      countdown -= 1;
-      updateButtonAndStorage(button, originalButtonText, countdown);
-
-      if (countdown <= 0) {
-        clearInterval(countdownInterval);
-        chrome.storage.local.remove(['countdown'], () => {
-          button.textContent = originalButtonText;
-          button.disabled = false;
-        });
-      }
-    }, 1000);
+  // Calculate target end time instead of countdown
+  chrome.storage.local.get(['endTime'], (result) => {
+    let endTime = result.endTime;
+    if (!endTime) {
+      const countdownDuration = 60 * 1000;
+      endTime = Date.now() + countdownDuration;
+      chrome.storage.local.set({ endTime: endTime });
+    }
+    updateCountdown(button, originalButtonText, endTime);
   });
+}
+
+function updateCountdown(button: HTMLInputElement, originalButtonText: string, endTime: number): void {
+  const update = () => {
+    const currentTime = Date.now();
+    let countdown = Math.ceil((endTime - currentTime) / 1000);
+
+    if (countdown > 0) {
+      button.textContent = `${originalButtonText} (${countdown}s)`;
+    } else {
+      clearInterval(interval);
+      chrome.storage.local.remove(['endTime'], () => {
+        button.textContent = originalButtonText;
+        button.disabled = false;
+      });
+    }
+  };
+
+  update(); // Update immediately to avoid delay
+  const interval = setInterval(update, 1000);
 }
 
 // Function to continue countdown if needed
 function continueCountdownIfNeeded(): void {
   const button = document.getElementById("fetchAllHistoriesBtn") as HTMLInputElement;
-  const originalButtonText = button.textContent || "Fetch All Histories"; // Default text or fetch from a more reliable source
+  const originalButtonText = button.textContent || "Fetch All Histories";
 
-  chrome.storage.local.get(['countdown'], (result) => {
-    if (result.countdown) {
-      startCountdown(button, originalButtonText);
+  chrome.storage.local.get(['endTime'], (result) => {
+    if (result.endTime && Date.now() < result.endTime) {
+      button.disabled = true;
+      updateCountdown(button, originalButtonText, result.endTime);
     }
   });
 }
