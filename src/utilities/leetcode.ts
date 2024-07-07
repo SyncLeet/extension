@@ -298,37 +298,61 @@ export const fetchLastAccepted = async (
  * @returns A Promise that resolves to an array of submission details.
  * @throws An error if any step in the process fails.
  */
-export const fetchAllSubmissionHistory = async (): Promise<
-  SubmissionDetails[]
-> => {
-  const progressList = await fetchProgressList();
-  const submissionDetails: SubmissionDetails[] = [];
+export const fetchAllSubmissionHistory = async (
+  onProgressUpdate: (progress: number) => void
+): Promise<SubmissionDetails[]> => {
+  try {
+    const progressList = await fetchProgressList();
+    const submissionDetails: SubmissionDetails[] = [];
+    const chunkSize = 1;
+    const maxRetries = 3;
 
-  // Chunk the progress list into groups of 5
-  for (let i = 0; i < progressList.length; i += 5) {
-    const chunk = progressList.slice(i, i + 5);
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-    // Fetch submission details for each question in the chunk
-    const submissionDetailsPromises = chunk.map(async (item) => {
-      const questionSlug = item.question.titleSlug;
-      const lastAccepted = await fetchLastAccepted(questionSlug);
-      const details = await fetchSubmissionDetails(lastAccepted.id);
-      return details;
-    });
+    const fetchWithRetry = async (questionSlug: string, retries: number = maxRetries, minDelayMs: number = 1000): Promise<SubmissionDetails | null> => {
+      const attempt = maxRetries - retries + 1;
+      try {
+        const lastAccepted = await fetchLastAccepted(questionSlug);
+        if (!lastAccepted || lastAccepted.id === undefined) {
+          console.log(`Last accepted submission not found for question: ${questionSlug}`);
+          return null;
+        }
+        return await fetchSubmissionDetails(lastAccepted.id);
+      } catch (error) {
+        const isRateLimitError = error.response && error.response.status === 429;
+        if (retries > 0 && !isRateLimitError) {
+          console.log(`Retrying fetch for ${questionSlug}, ${retries} retries left.`);
+          const delayMs = minDelayMs * Math.pow(2, attempt - 1); // Delay using exponential backoff formula
+          await delay(delayMs);
+          return fetchWithRetry(questionSlug, retries - 1, minDelayMs);
+        } else if (isRateLimitError) {
+          console.log(`Rate limit exceeded for ${questionSlug}, waiting longer before retrying.`);
+          const delayMs = minDelayMs * Math.pow(2, attempt + 1); // Wait longer due to rate limit
+          await delay(delayMs);
+          return fetchWithRetry(questionSlug, retries - 1, minDelayMs);
+        } else {
+          console.error(`Error fetching submission details after retries: ${error}`);
+          return null;
+        }
+      }
+    };
 
-    // Wait for all submission details promises to resolve
-    const chunkSubmissionDetails = await Promise.all(submissionDetailsPromises);
-    submissionDetails.push(...chunkSubmissionDetails);
+    for (let i = 0; i < progressList.length; i += chunkSize) {
+      const chunk = progressList.slice(i, i + chunkSize);
+      const submissionDetailsPromises = chunk.map(item => fetchWithRetry(item.question.titleSlug));
 
-    console.log(
-      `Progress: ${((i + 5) / progressList.length) * 100}% (${i + 5}/${
-        progressList.length
-      })`
-    );
+      const chunkSubmissionDetails = (await Promise.all(submissionDetailsPromises)).filter(Boolean);
+      submissionDetails.push(...chunkSubmissionDetails);
+      
+      const progress = Math.min(Math.floor(((i + chunkSize) / progressList.length) * 100), 100);
+      onProgressUpdate(progress);
+      console.log(`Progress: ${progress}% (${i + chunkSize}/${progressList.length}, ${submissionDetails.length})`);  
+    }
+    await delay(500)
 
-    // Add a delay of 3 seconds before processing the next chunk
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    return submissionDetails;
+  } catch (error) {
+    console.error(`Error fetching all submission history: ${error}`);
+    throw error;
   }
-
-  return submissionDetails;
 };
