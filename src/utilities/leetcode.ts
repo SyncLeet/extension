@@ -92,6 +92,9 @@ export const fetchSubmissionDetails = async (
     throw new Error(`Failed to fetch submission details for ${submissionId}`);
   }
   const { data } = await response.json();
+  if (data.submissionDetails === null) {
+    throw new Error(`Submission details not found for ${submissionId}`);
+  }
   return data.submissionDetails;
 };
 
@@ -304,12 +307,12 @@ export const fetchAllSubmissionHistory = async (
   try {
     const progressList = await fetchProgressList();
     const submissionDetails: SubmissionDetails[] = [];
-    const chunkSize = 1;
-    const maxRetries = 3;
+    const chunkSize = 3;
+    const maxRetries = 10;
 
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-    const fetchWithRetry = async (questionSlug: string, retries: number = maxRetries, minDelayMs: number = 1000): Promise<SubmissionDetails | null> => {
+    const fetchWithRetry = async (questionSlug: string, retries: number = maxRetries, minDelayMs: number = 4000): Promise<SubmissionDetails | null> => {
       const attempt = maxRetries - retries + 1;
       try {
         const lastAccepted = await fetchLastAccepted(questionSlug);
@@ -319,20 +322,11 @@ export const fetchAllSubmissionHistory = async (
         }
         return await fetchSubmissionDetails(lastAccepted.id);
       } catch (error) {
-        const isRateLimitError = error.response && error.response.status === 429;
-        if (retries > 0 && !isRateLimitError) {
+        if (retries > 0) {
           console.log(`Retrying fetch for ${questionSlug}, ${retries} retries left.`);
           const delayMs = minDelayMs * Math.pow(2, attempt - 1); // Delay using exponential backoff formula
           await delay(delayMs);
           return fetchWithRetry(questionSlug, retries - 1, minDelayMs);
-        } else if (isRateLimitError) {
-          console.log(`Rate limit exceeded for ${questionSlug}, waiting longer before retrying.`);
-          const delayMs = minDelayMs * Math.pow(2, attempt + 1); // Wait longer due to rate limit
-          await delay(delayMs);
-          return fetchWithRetry(questionSlug, retries - 1, minDelayMs);
-        } else {
-          console.error(`Error fetching submission details after retries: ${error}`);
-          return null;
         }
       }
     };
@@ -340,7 +334,7 @@ export const fetchAllSubmissionHistory = async (
     for (let i = 0; i < progressList.length; i += chunkSize) {
       const chunk = progressList.slice(i, i + chunkSize);
       const submissionDetailsPromises = chunk.map(item => fetchWithRetry(item.question.titleSlug));
-
+      
       const chunkSubmissionDetails = (await Promise.all(submissionDetailsPromises)).filter(Boolean);
       submissionDetails.push(...chunkSubmissionDetails);
       
