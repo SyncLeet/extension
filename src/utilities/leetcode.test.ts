@@ -1,5 +1,6 @@
 import { fetchSubmission } from "./leetcode";
-import { fetchProgressAt, fetchProgress } from "./leetcode";
+import { fetchProgressListAt, fetchProgressList } from "./leetcode";
+import { fetchLastSubmitted } from "./leetcode";
 
 describe("LeetCode Module", () => {
   test(
@@ -16,7 +17,7 @@ describe("LeetCode Module", () => {
       expect(submission.language).toBe("python3");
       expect(submission.code).toContain("class Solution:");
     },
-    1 * 1000
+    2 * 1000
   );
 
   test(
@@ -33,7 +34,7 @@ describe("LeetCode Module", () => {
       expect(submission.language).toBe("python3");
       expect(submission.code).toContain("class Solution:");
     },
-    1 * 1000
+    2 * 1000
   );
 
   test(
@@ -43,14 +44,14 @@ describe("LeetCode Module", () => {
       const promise = fetchSubmission(session, 1320811270);
       await expect(promise).rejects.toThrow("fetchSubmission, empty response");
     },
-    1 * 1000
+    2 * 1000
   );
 
   test(
-    "fetchProgressAt.toPass.01",
+    "fetchProgressListAt.toPass.01",
     async () => {
       const session = process.env.LEETCODE_SESSION;
-      const [hasMore, history] = await fetchProgressAt(session, 0);
+      const [hasMore, history] = await fetchProgressListAt(session, 0);
       expect(hasMore).toBe(true);
       for (const item of history) {
         expect(item.titleSlug).toBeDefined();
@@ -62,14 +63,14 @@ describe("LeetCode Module", () => {
         }
       }
     },
-    1 * 1000
+    2 * 1000
   );
 
   test(
-    "fetchProgressAt.toPass.02",
+    "fetchProgressListAt.toPass.02",
     async () => {
       const session = process.env.LEETCODE_SESSION;
-      const [hasMore, history] = await fetchProgressAt(session, 1);
+      const [hasMore, history] = await fetchProgressListAt(session, 1);
       expect(hasMore).toBe(true);
       for (const item of history) {
         expect(item.titleSlug).toBeDefined();
@@ -81,24 +82,26 @@ describe("LeetCode Module", () => {
         }
       }
     },
-    1 * 1000
+    2 * 1000
   );
 
   test(
-    "fetchProgressAt.toFail.01",
+    "fetchProgressListAt.toFail.01",
     async () => {
       const session = "Invalid LeetCode Session";
-      const promise = fetchProgressAt(session, 0);
-      await expect(promise).rejects.toThrow("fetchProgressAt, empty response");
+      const promise = fetchProgressListAt(session, 0);
+      await expect(promise).rejects.toThrow(
+        "fetchProgressListAt, empty response"
+      );
     },
-    1 * 1000
+    2 * 1000
   );
 
   test(
-    "fetchProgress.toPass.01",
+    "fetchProgressList.toPass.01",
     async () => {
       const session = process.env.LEETCODE_SESSION;
-      const history = await fetchProgress(session);
+      const history = await fetchProgressList(session);
       for (const item of history) {
         expect(item.titleSlug).toBeDefined();
         expect(item.titleSlug).not.toBe("");
@@ -109,6 +112,43 @@ describe("LeetCode Module", () => {
         }
       }
     },
-    10 * 1000
+    8 * 1000
+  );
+
+  test(
+    "fetchLastSubmitted.toPass.01",
+    async () => {
+      const session = process.env.LEETCODE_SESSION;
+      const titleSlug = "number-of-atoms";
+      const submissionId = await fetchLastSubmitted(session, titleSlug);
+      expect(submissionId).toBeDefined();
+      expect(submissionId).toBeGreaterThan(0);
+    },
+    2 * 1000
+  );
+
+  test(
+    "fetchLastSubmitted.toPass.02",
+    async () => {
+      const session = process.env.LEETCODE_SESSION;
+      const titleSlug = "regular-expression-matching";
+      const submissionId = await fetchLastSubmitted(session, titleSlug);
+      expect(submissionId).toBeDefined();
+      expect(submissionId).toBeGreaterThan(0);
+    },
+    2 * 1000
+  );
+
+  test(
+    "fetchLastSubmitted.toFail.01",
+    async () => {
+      const session = process.env.LEETCODE_SESSION;
+      const titleSlug = "invalidtitleslugthatdoesnotexist";
+      const promise = fetchLastSubmitted(session, titleSlug);
+      await expect(promise).rejects.toThrow(
+        "fetchLastSubmitted, empty response"
+      );
+    },
+    2 * 1000
   );
 });

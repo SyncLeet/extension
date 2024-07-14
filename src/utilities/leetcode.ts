@@ -128,7 +128,7 @@ interface Progress {
  * @param pageNo The page number
  * @returns Whether there are more pages and items on that page
  */
-export const fetchProgressAt = async (
+export const fetchProgressListAt = async (
   session: string,
   pageNo: number
 ): Promise<[boolean, Progress[]]> => {
@@ -169,11 +169,11 @@ export const fetchProgressAt = async (
 
   // Validate the response
   if (!response.ok) {
-    throw new Error("fetchProgressAt, invalid status");
+    throw new Error("fetchProgressListAt, invalid status");
   }
   const { data } = await response.json();
   if (data === null || data.solvedQuestionsInfo === null) {
-    throw new Error("fetchProgressAt, empty response");
+    throw new Error("fetchProgressListAt, empty response");
   }
 
   // Parse the response
@@ -195,17 +195,74 @@ export const fetchProgressAt = async (
  * Fetche the entire progress list from LeetCode.
  * @param session The session cookie
  */
-export const fetchProgress = async (session: string) => {
+export const fetchProgressList = async (session: string) => {
   // Prepare the parameters
   const history: Progress[] = [];
   var [pageNo, hasMore] = [1, true];
 
   // Loop until there are no more pages
   while (hasMore) {
-    const response = await retry(() => fetchProgressAt(session, pageNo));
+    const response = await retry(() => fetchProgressListAt(session, pageNo));
     var [hasMore, items] = response;
     history.push(...items);
     pageNo++;
   }
   return history;
+};
+
+export const fetchLastSubmitted = async (
+  session: string,
+  titleSlug: string
+): Promise<number> => {
+  // Define the query
+  const query = `
+    query submissionList($offset: Int!, $limit: Int!, $lastKey: String, $questionSlug: String!, $lang: Int, $status: Int) {
+      questionSubmissionList(
+        offset: $offset
+        limit: $limit
+        lastKey: $lastKey
+        questionSlug: $questionSlug
+        lang: $lang
+        status: $status
+      ) {
+        lastKey
+        hasNext
+        submissions {
+          id
+        }
+      }
+    }
+  `;
+
+  // Send the request
+  const response = await fetch(ENDPOINT, {
+    headers: {
+      "content-type": "application/json",
+      cookie: `LEETCODE_SESSION=${session}`,
+    },
+    body: JSON.stringify({
+      query,
+      variables: {
+        offset: 0,
+        limit: 20,
+        questionSlug: titleSlug,
+        status: 10,
+      },
+      operationName: "submissionList",
+    }),
+    method: "POST",
+  });
+
+  // Validate the response
+  if (!response.ok) {
+    throw new Error("fetchLastSubmitted, invalid status");
+  }
+  const { data } = await response.json();
+  if (data === null || data.questionSubmissionList === null) {
+    throw new Error("fetchLastSubmitted, empty response");
+  }
+
+  // Parse the response
+  const { submissions } = data.questionSubmissionList;
+  return parseInt(submissions[0].id);
 };
