@@ -5,4 +5,5 @@ module.exports = {
   setupFiles: ["dotenv/config"],
   verbose: true,
   collectCoverage: true,
+  silent: false,
 };

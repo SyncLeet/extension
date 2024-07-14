@@ -54,7 +54,7 @@ interface Submission {
  * @param submissionId The submission ID
  * @returns The submission details
  */
-export const fetchSubmission = async (
+export const fetchSubmissionById = async (
   session: string,
   submissionId: number
 ): Promise<Submission> => {
@@ -94,11 +94,11 @@ export const fetchSubmission = async (
 
   // Validate the response
   if (!response.ok) {
-    throw new Error("fetchSubmission, invalid status");
+    throw new Error("fetchSubmissionById, invalid status");
   }
   const { data } = await response.json();
   if (data === null || data.submissionDetails === null) {
-    throw new Error(`fetchSubmission, empty response`);
+    throw new Error(`fetchSubmissionById, empty response`);
   }
   const { submissionDetails: details } = data;
 
@@ -128,7 +128,7 @@ interface Progress {
  * @param pageNo The page number
  * @returns Whether there are more pages and items on that page
  */
-export const fetchProgressListAt = async (
+export const fetchProgressAtPage = async (
   session: string,
   pageNo: number
 ): Promise<[boolean, Progress[]]> => {
@@ -169,11 +169,11 @@ export const fetchProgressListAt = async (
 
   // Validate the response
   if (!response.ok) {
-    throw new Error("fetchProgressListAt, invalid status");
+    throw new Error("fetchProgressAtPage, invalid status");
   }
   const { data } = await response.json();
   if (data === null || data.solvedQuestionsInfo === null) {
-    throw new Error("fetchProgressListAt, empty response");
+    throw new Error("fetchProgressAtPage, empty response");
   }
 
   // Parse the response
@@ -192,25 +192,12 @@ export const fetchProgressListAt = async (
 };
 
 /**
- * Fetche the entire progress list from LeetCode.
+ * Fetch the last accepted submission ID for a problem.
  * @param session The session cookie
+ * @param titleSlug The title slug of the problem
+ * @returns The last submission ID
  */
-export const fetchProgressList = async (session: string) => {
-  // Prepare the parameters
-  const history: Progress[] = [];
-  var [pageNo, hasMore] = [1, true];
-
-  // Loop until there are no more pages
-  while (hasMore) {
-    const response = await retry(() => fetchProgressListAt(session, pageNo));
-    var [hasMore, items] = response;
-    history.push(...items);
-    pageNo++;
-  }
-  return history;
-};
-
-export const fetchLastSubmitted = async (
+export const fetchLastAcceptedId = async (
   session: string,
   titleSlug: string
 ): Promise<number> => {
@@ -255,14 +242,53 @@ export const fetchLastSubmitted = async (
 
   // Validate the response
   if (!response.ok) {
-    throw new Error("fetchLastSubmitted, invalid status");
+    throw new Error("fetchLastAcceptedId, invalid status");
   }
   const { data } = await response.json();
   if (data === null || data.questionSubmissionList === null) {
-    throw new Error("fetchLastSubmitted, empty response");
+    throw new Error("fetchLastAcceptedId, empty response");
   }
 
   // Parse the response
   const { submissions } = data.questionSubmissionList;
   return parseInt(submissions[0].id);
+};
+
+/**
+ * Fetch the history of submissions from LeetCode.
+ * @param session The session cookie
+ * @returns The progress and submission history
+ */
+export const fetchHistory = async (
+  session: string
+): Promise<[Progress[], Submission[]]> => {
+  // Fetch the progress at each page
+  const progress: Progress[] = [];
+  var [pageNo, hasMore] = [1, true];
+  while (hasMore) {
+    const response = await retry(() => fetchProgressAtPage(session, pageNo));
+    var [hasMore, items] = response;
+    progress.push(...items);
+    pageNo++;
+  }
+
+  // Fetch the submission details for each item
+  const history: Submission[] = [];
+  for (let i = 0; i < progress.length; i += 4) {
+    const promises = progress.slice(i, i + 4).map(async (item, idx) => {
+      const fn1 = () => fetchLastAcceptedId(session, item.titleSlug);
+      const acceptedId = await retry(fn1);
+      await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
+      const fn2 = () => fetchSubmissionById(session, acceptedId);
+      const submission = await retry(fn2);
+      await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
+      console.assert(submission.accepted);
+      return submission;
+    });
+    const resolves = await Promise.all(promises);
+    history.push(...resolves);
+  }
+
+  // Question details and submission details are now available
+  return [progress, history];
 };

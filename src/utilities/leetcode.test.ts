@@ -1,13 +1,14 @@
-import { fetchSubmission } from "./leetcode";
-import { fetchProgressListAt, fetchProgressList } from "./leetcode";
-import { fetchLastSubmitted } from "./leetcode";
+import { fetchSubmissionById } from "./leetcode";
+import { fetchProgressAtPage } from "./leetcode";
+import { fetchLastAcceptedId } from "./leetcode";
+import { fetchHistory } from "./leetcode";
 
 describe("LeetCode Module", () => {
   test(
-    "fetchSubmission.toPass.01",
+    "fetchSubmissionById.toPass.01",
     async () => {
       const session = process.env.LEETCODE_SESSION;
-      const submission = await fetchSubmission(session, 1320811270);
+      const submission = await fetchSubmissionById(session, 1320811270);
       expect(submission).toBeDefined();
       expect(submission.title).toBe("Number of Atoms");
       expect(submission.titleSlug).toBe("number-of-atoms");
@@ -21,10 +22,10 @@ describe("LeetCode Module", () => {
   );
 
   test(
-    "fetchSubmission.toPass.02",
+    "fetchSubmissionById.toPass.02",
     async () => {
       const session = process.env.LEETCODE_SESSION;
-      const submission = await fetchSubmission(session, 700806193);
+      const submission = await fetchSubmissionById(session, 700806193);
       expect(submission).toBeDefined();
       expect(submission.title).toBe("Regular Expression Matching");
       expect(submission.titleSlug).toBe("regular-expression-matching");
@@ -38,70 +39,23 @@ describe("LeetCode Module", () => {
   );
 
   test(
-    "fetchSubmission.toFail.01",
+    "fetchSubmissionById.toFail.01",
     async () => {
       const session = "Invalid LeetCode Session";
-      const promise = fetchSubmission(session, 1320811270);
-      await expect(promise).rejects.toThrow("fetchSubmission, empty response");
-    },
-    2 * 1000
-  );
-
-  test(
-    "fetchProgressListAt.toPass.01",
-    async () => {
-      const session = process.env.LEETCODE_SESSION;
-      const [hasMore, history] = await fetchProgressListAt(session, 0);
-      expect(hasMore).toBe(true);
-      for (const item of history) {
-        expect(item.titleSlug).toBeDefined();
-        expect(item.titleSlug).not.toBe("");
-        expect(item.topicTags).toBeDefined();
-        for (const tag of item.topicTags) {
-          expect(tag).toBeDefined();
-          expect(tag).not.toBe("");
-        }
-      }
-    },
-    2 * 1000
-  );
-
-  test(
-    "fetchProgressListAt.toPass.02",
-    async () => {
-      const session = process.env.LEETCODE_SESSION;
-      const [hasMore, history] = await fetchProgressListAt(session, 1);
-      expect(hasMore).toBe(true);
-      for (const item of history) {
-        expect(item.titleSlug).toBeDefined();
-        expect(item.titleSlug).not.toBe("");
-        expect(item.topicTags).toBeDefined();
-        for (const tag of item.topicTags) {
-          expect(tag).toBeDefined();
-          expect(tag).not.toBe("");
-        }
-      }
-    },
-    2 * 1000
-  );
-
-  test(
-    "fetchProgressListAt.toFail.01",
-    async () => {
-      const session = "Invalid LeetCode Session";
-      const promise = fetchProgressListAt(session, 0);
+      const promise = fetchSubmissionById(session, 1320811270);
       await expect(promise).rejects.toThrow(
-        "fetchProgressListAt, empty response"
+        "fetchSubmissionById, empty response"
       );
     },
     2 * 1000
   );
 
   test(
-    "fetchProgressList.toPass.01",
+    "fetchProgressAtPage.toPass.01",
     async () => {
       const session = process.env.LEETCODE_SESSION;
-      const history = await fetchProgressList(session);
+      const [hasMore, history] = await fetchProgressAtPage(session, 0);
+      expect(hasMore).toBe(true);
       for (const item of history) {
         expect(item.titleSlug).toBeDefined();
         expect(item.titleSlug).not.toBe("");
@@ -112,15 +66,46 @@ describe("LeetCode Module", () => {
         }
       }
     },
-    8 * 1000
+    2 * 1000
   );
 
   test(
-    "fetchLastSubmitted.toPass.01",
+    "fetchProgressAtPage.toPass.02",
+    async () => {
+      const session = process.env.LEETCODE_SESSION;
+      const [hasMore, history] = await fetchProgressAtPage(session, 1);
+      expect(hasMore).toBe(true);
+      for (const item of history) {
+        expect(item.titleSlug).toBeDefined();
+        expect(item.titleSlug).not.toBe("");
+        expect(item.topicTags).toBeDefined();
+        for (const tag of item.topicTags) {
+          expect(tag).toBeDefined();
+          expect(tag).not.toBe("");
+        }
+      }
+    },
+    2 * 1000
+  );
+
+  test(
+    "fetchProgressAtPage.toFail.01",
+    async () => {
+      const session = "Invalid LeetCode Session";
+      const promise = fetchProgressAtPage(session, 0);
+      await expect(promise).rejects.toThrow(
+        "fetchProgressAtPage, empty response"
+      );
+    },
+    2 * 1000
+  );
+
+  test(
+    "fetchLastAcceptedId.toPass.01",
     async () => {
       const session = process.env.LEETCODE_SESSION;
       const titleSlug = "number-of-atoms";
-      const submissionId = await fetchLastSubmitted(session, titleSlug);
+      const submissionId = await fetchLastAcceptedId(session, titleSlug);
       expect(submissionId).toBeDefined();
       expect(submissionId).toBeGreaterThan(0);
     },
@@ -128,11 +113,11 @@ describe("LeetCode Module", () => {
   );
 
   test(
-    "fetchLastSubmitted.toPass.02",
+    "fetchLastAcceptedId.toPass.02",
     async () => {
       const session = process.env.LEETCODE_SESSION;
       const titleSlug = "regular-expression-matching";
-      const submissionId = await fetchLastSubmitted(session, titleSlug);
+      const submissionId = await fetchLastAcceptedId(session, titleSlug);
       expect(submissionId).toBeDefined();
       expect(submissionId).toBeGreaterThan(0);
     },
@@ -140,15 +125,33 @@ describe("LeetCode Module", () => {
   );
 
   test(
-    "fetchLastSubmitted.toFail.01",
+    "fetchLastAcceptedId.toFail.01",
     async () => {
       const session = process.env.LEETCODE_SESSION;
       const titleSlug = "invalidtitleslugthatdoesnotexist";
-      const promise = fetchLastSubmitted(session, titleSlug);
+      const promise = fetchLastAcceptedId(session, titleSlug);
       await expect(promise).rejects.toThrow(
-        "fetchLastSubmitted, empty response"
+        "fetchLastAcceptedId, empty response"
       );
     },
     2 * 1000
+  );
+
+  test(
+    "fetchHistory.toPass.01",
+    async () => {
+      const session = process.env.LEETCODE_SESSION;
+      const [progress, history] = await fetchHistory(session);
+      expect(progress).toBeDefined();
+      expect(progress).toBeGreaterThan(0);
+      expect(history).toBeDefined();
+      expect(history).toBeGreaterThan(0);
+      expect(progress.length).toBe(history.length);
+      for (let i = 0; i < progress.length; i++) {
+        expect(progress[i].titleSlug).toBe(history[i].titleSlug);
+        expect(history[i].accepted).toBe(true);
+      }
+    },
+    500 * 1000
   );
 });

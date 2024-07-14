@@ -9,7 +9,7 @@
  */
 export const retry = async <T>(
   fn: () => Promise<T>,
-  minDelay: number = 5,
+  minDelay: number = 8,
   maxRetry: number = 16
 ): Promise<T> => {
   for (let i = 0; i < maxRetry; i++) {
