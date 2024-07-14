@@ -1,79 +1,6 @@
 const ENDPOINT = "https://leetcode.com/graphql/";
 
-/**
- * Response from the submission details query.
- */
-interface Submission {
-  question: {
-    title: string;
-    questionId: string;
-    titleSlug: string;
-  };
-  totalCorrect: number;
-  totalTestcases: number;
-  runtimeDisplay: string;
-  memoryDisplay: string;
-  code: string;
-  lang: {
-    name: string;
-  };
-}
-
-/**
- * Fetches the submission details from LeetCode.
- * @param session The session cookie
- * @param submissionId The submission ID
- * @returns The submission details
- */
-export const fetchSubmission = async (
-  session: string,
-  submissionId: number
-): Promise<Submission> => {
-  const query = `
-    query submissionDetails($submissionId: Int!) {
-      submissionDetails(submissionId: $submissionId) {
-        question {
-          title
-          questionId
-          titleSlug
-        }
-        totalCorrect
-        totalTestcases
-        runtimeDisplay
-        memoryDisplay
-        code
-        lang {
-          name
-        }
-      }
-    }
-  `;
-  const response = await fetch(ENDPOINT, {
-    headers: {
-      "content-type": "application/json",
-      cookie: `LEETCODE_SESSION=${session}`,
-    },
-    body: JSON.stringify({
-      query,
-      variables: { submissionId },
-      operationName: "submissionDetails",
-    }),
-    method: "POST",
-  });
-  if (!response.ok) {
-    throw new Error(`fetchSubmission, HTTP status ${response.status}`);
-  }
-  const { data } = await response.json();
-  if (data.submissionDetails === null) {
-    throw new Error(`fetchSubmission, empty response`);
-  }
-  return data.submissionDetails;
-};
-
-/**
- * Extension lookup table for LeetCode languages.
- */
-export const extensionLookup = {
+const LANGUAGE = {
   cpp: "cpp",
   java: "java",
   python: "py",
@@ -101,73 +28,82 @@ export const extensionLookup = {
 };
 
 /**
- * Represents the details of a submission on LeetCode.
+ * Response from the submission details query.
  */
-interface SubmissionDetails {
-  question: {
-    title: string;
-    questionId: string;
-    titleSlug: string;
-  };
-  totalCorrect: number;
-  totalTestcases: number;
-  runtimeDisplay: string;
-  memoryDisplay: string;
+interface Submission {
+  accepted: boolean;
   code: string;
-  lang: {
-    name: string;
-  };
+  language: string;
+  memory: string;
+  runtime: string;
+  title: string;
+  titleSlug: string;
 }
 
 /**
- * Retrieves the details of a submission from LeetCode.
- *
- * @param submissionId - The ID of the submission.
- * @returns A Promise that resolves to the submission details.
- * @throws An error if the request fails.
+ * Fetches the submission details from LeetCode.
+ * @param session The session cookie
+ * @param submissionId The submission ID
+ * @returns The submission details
  */
-export const fetchSubmissionDetails = async (
+export const fetchSubmission = async (
+  session: string,
   submissionId: number
-): Promise<SubmissionDetails> => {
-  const response = await fetch("https://leetcode.com/graphql/", {
+): Promise<Submission> => {
+  // Define the query
+  const query = `
+    query submissionDetails($submissionId: Int!) {
+      submissionDetails(submissionId: $submissionId) {
+        question {
+          title
+          titleSlug
+        }
+        totalCorrect
+        totalTestcases
+        runtimeDisplay
+        memoryDisplay
+        code
+        lang {
+          name
+        }
+      }
+    }
+  `;
+
+  // Send the request
+  const response = await fetch(ENDPOINT, {
     headers: {
       "content-type": "application/json",
+      cookie: `LEETCODE_SESSION=${session}`,
     },
     body: JSON.stringify({
-      query: `
-        query submissionDetails($submissionId: Int!) {
-          submissionDetails(submissionId: $submissionId) {
-            question {
-              title
-              questionId
-              titleSlug
-            }
-            totalCorrect
-            totalTestcases
-            runtimeDisplay
-            memoryDisplay
-            code
-            lang {
-              name
-            }
-          }
-        }
-      `,
+      query,
       variables: { submissionId },
       operationName: "submissionDetails",
     }),
     method: "POST",
-    mode: "cors",
-    credentials: "include",
   });
+
+  // Validate the response
   if (!response.ok) {
-    throw new Error(`Failed to fetch submission details for ${submissionId}`);
+    throw new Error("fetchSubmission, invalid status");
   }
   const { data } = await response.json();
-  if (data.submissionDetails === null) {
-    throw new Error(`Submission details not found for ${submissionId}`);
+  if (data === null || data.submissionDetails === null) {
+    throw new Error(`fetchSubmission, empty response`);
   }
-  return data.submissionDetails;
+  const { submissionDetails: details } = data;
+
+  // Return the parsed details
+  return {
+    accepted: details.totalCorrect === details.totalTestcases,
+    code: details.code,
+    language: details.lang.name,
+    memory: details.memoryDisplay,
+    runtime: details.runtimeDisplay,
+    title: details.question.title,
+    titleSlug: details.question.titleSlug,
+  };
 };
 
 /**
@@ -373,72 +309,72 @@ export const fetchLastAccepted = async (
  * @returns A Promise that resolves to an array of submission details.
  * @throws An error if any step in the process fails.
  */
-export const fetchAllSubmissionHistory = async (
-  onProgressUpdate: (progress: number) => void
-): Promise<SubmissionDetails[]> => {
-  try {
-    const progressList = await fetchProgressList();
-    const submissionDetails: SubmissionDetails[] = [];
-    const chunkSize = 3;
-    const maxRetries = 10;
+// export const fetchAllSubmissionHistory = async (
+//   onProgressUpdate: (progress: number) => void
+// ): Promise<SubmissionDetails[]> => {
+//   try {
+//     const progressList = await fetchProgressList();
+//     const submissionDetails: SubmissionDetails[] = [];
+//     const chunkSize = 3;
+//     const maxRetries = 10;
 
-    const delay = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
+//     const delay = (ms: number) =>
+//       new Promise((resolve) => setTimeout(resolve, ms));
 
-    const fetchWithRetry = async (
-      questionSlug: string,
-      retries: number = maxRetries,
-      minDelayMs: number = 4000
-    ): Promise<SubmissionDetails | null> => {
-      const attempt = maxRetries - retries + 1;
-      try {
-        const lastAccepted = await fetchLastAccepted(questionSlug);
-        if (!lastAccepted || lastAccepted.id === undefined) {
-          console.log(
-            `Last accepted submission not found for question: ${questionSlug}`
-          );
-          return null;
-        }
-        return await fetchSubmissionDetails(lastAccepted.id);
-      } catch (error) {
-        if (retries > 0) {
-          console.log(
-            `Retrying fetch for ${questionSlug}, ${retries} retries left.`
-          );
-          const delayMs = minDelayMs * Math.pow(2, attempt - 1); // Delay using exponential backoff formula
-          await delay(delayMs);
-          return fetchWithRetry(questionSlug, retries - 1, minDelayMs);
-        }
-      }
-    };
+//     const fetchWithRetry = async (
+//       questionSlug: string,
+//       retries: number = maxRetries,
+//       minDelayMs: number = 4000
+//     ): Promise<SubmissionDetails | null> => {
+//       const attempt = maxRetries - retries + 1;
+//       try {
+//         const lastAccepted = await fetchLastAccepted(questionSlug);
+//         if (!lastAccepted || lastAccepted.id === undefined) {
+//           console.log(
+//             `Last accepted submission not found for question: ${questionSlug}`
+//           );
+//           return null;
+//         }
+//         return await fetchSubmissionDetails(lastAccepted.id);
+//       } catch (error) {
+//         if (retries > 0) {
+//           console.log(
+//             `Retrying fetch for ${questionSlug}, ${retries} retries left.`
+//           );
+//           const delayMs = minDelayMs * Math.pow(2, attempt - 1); // Delay using exponential backoff formula
+//           await delay(delayMs);
+//           return fetchWithRetry(questionSlug, retries - 1, minDelayMs);
+//         }
+//       }
+//     };
 
-    for (let i = 0; i < progressList.length; i += chunkSize) {
-      const chunk = progressList.slice(i, i + chunkSize);
-      const submissionDetailsPromises = chunk.map((item) =>
-        fetchWithRetry(item.question.titleSlug)
-      );
+//     for (let i = 0; i < progressList.length; i += chunkSize) {
+//       const chunk = progressList.slice(i, i + chunkSize);
+//       const submissionDetailsPromises = chunk.map((item) =>
+//         fetchWithRetry(item.question.titleSlug)
+//       );
 
-      const chunkSubmissionDetails = (
-        await Promise.all(submissionDetailsPromises)
-      ).filter(Boolean);
-      submissionDetails.push(...chunkSubmissionDetails);
+//       const chunkSubmissionDetails = (
+//         await Promise.all(submissionDetailsPromises)
+//       ).filter(Boolean);
+//       submissionDetails.push(...chunkSubmissionDetails);
 
-      const progress = Math.min(
-        Math.floor(((i + chunkSize) / progressList.length) * 100),
-        100
-      );
-      onProgressUpdate(progress);
-      console.log(
-        `Progress: ${progress}% (${i + chunkSize}/${progressList.length}, ${
-          submissionDetails.length
-        })`
-      );
-    }
-    await delay(500);
+//       const progress = Math.min(
+//         Math.floor(((i + chunkSize) / progressList.length) * 100),
+//         100
+//       );
+//       onProgressUpdate(progress);
+//       console.log(
+//         `Progress: ${progress}% (${i + chunkSize}/${progressList.length}, ${
+//           submissionDetails.length
+//         })`
+//       );
+//     }
+//     await delay(500);
 
-    return submissionDetails;
-  } catch (error) {
-    console.error(`Error fetching all submission history: ${error}`);
-    throw error;
-  }
-};
+//     return submissionDetails;
+//   } catch (error) {
+//     console.error(`Error fetching all submission history: ${error}`);
+//     throw error;
+//   }
+// };
