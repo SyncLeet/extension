@@ -15,7 +15,13 @@
     "128": "asset/image/logox128.png"
   },
 
-  "permissions": ["webRequest", "storage", "identity", "notifications"],
+  "permissions": [
+    "webRequest",
+    "storage",
+    "identity",
+    "notifications",
+    "cookies"
+  ],
   "host_permissions": ["https://leetcode.com/*", "https://github.com/*"],
 
   "content_scripts": [

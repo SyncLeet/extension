@@ -1,3 +1,75 @@
+const ENDPOINT = "https://leetcode.com/graphql/";
+
+/**
+ * Response from the submission details query.
+ */
+interface Submission {
+  question: {
+    title: string;
+    questionId: string;
+    titleSlug: string;
+  };
+  totalCorrect: number;
+  totalTestcases: number;
+  runtimeDisplay: string;
+  memoryDisplay: string;
+  code: string;
+  lang: {
+    name: string;
+  };
+}
+
+/**
+ * Fetches the submission details from LeetCode.
+ * @param session The session cookie
+ * @param submissionId The submission ID
+ * @returns The submission details
+ */
+export const fetchSubmission = async (
+  session: string,
+  submissionId: number
+): Promise<Submission> => {
+  const query = `
+    query submissionDetails($submissionId: Int!) {
+      submissionDetails(submissionId: $submissionId) {
+        question {
+          title
+          questionId
+          titleSlug
+        }
+        totalCorrect
+        totalTestcases
+        runtimeDisplay
+        memoryDisplay
+        code
+        lang {
+          name
+        }
+      }
+    }
+  `;
+  const response = await fetch(ENDPOINT, {
+    headers: {
+      "content-type": "application/json",
+      cookie: `LEETCODE_SESSION=${session}`,
+    },
+    body: JSON.stringify({
+      query,
+      variables: { submissionId },
+      operationName: "submissionDetails",
+    }),
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error(`fetchSubmission, HTTP status ${response.status}`);
+  }
+  const { data } = await response.json();
+  if (data.submissionDetails === null) {
+    throw new Error(`fetchSubmission, empty response`);
+  }
+  return data.submissionDetails;
+};
+
 /**
  * Extension lookup table for LeetCode languages.
  */
@@ -310,20 +382,29 @@ export const fetchAllSubmissionHistory = async (
     const chunkSize = 3;
     const maxRetries = 10;
 
-    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    const delay = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
 
-    const fetchWithRetry = async (questionSlug: string, retries: number = maxRetries, minDelayMs: number = 4000): Promise<SubmissionDetails | null> => {
+    const fetchWithRetry = async (
+      questionSlug: string,
+      retries: number = maxRetries,
+      minDelayMs: number = 4000
+    ): Promise<SubmissionDetails | null> => {
       const attempt = maxRetries - retries + 1;
       try {
         const lastAccepted = await fetchLastAccepted(questionSlug);
         if (!lastAccepted || lastAccepted.id === undefined) {
-          console.log(`Last accepted submission not found for question: ${questionSlug}`);
+          console.log(
+            `Last accepted submission not found for question: ${questionSlug}`
+          );
           return null;
         }
         return await fetchSubmissionDetails(lastAccepted.id);
       } catch (error) {
         if (retries > 0) {
-          console.log(`Retrying fetch for ${questionSlug}, ${retries} retries left.`);
+          console.log(
+            `Retrying fetch for ${questionSlug}, ${retries} retries left.`
+          );
           const delayMs = minDelayMs * Math.pow(2, attempt - 1); // Delay using exponential backoff formula
           await delay(delayMs);
           return fetchWithRetry(questionSlug, retries - 1, minDelayMs);
@@ -333,16 +414,27 @@ export const fetchAllSubmissionHistory = async (
 
     for (let i = 0; i < progressList.length; i += chunkSize) {
       const chunk = progressList.slice(i, i + chunkSize);
-      const submissionDetailsPromises = chunk.map(item => fetchWithRetry(item.question.titleSlug));
-      
-      const chunkSubmissionDetails = (await Promise.all(submissionDetailsPromises)).filter(Boolean);
+      const submissionDetailsPromises = chunk.map((item) =>
+        fetchWithRetry(item.question.titleSlug)
+      );
+
+      const chunkSubmissionDetails = (
+        await Promise.all(submissionDetailsPromises)
+      ).filter(Boolean);
       submissionDetails.push(...chunkSubmissionDetails);
-      
-      const progress = Math.min(Math.floor(((i + chunkSize) / progressList.length) * 100), 100);
+
+      const progress = Math.min(
+        Math.floor(((i + chunkSize) / progressList.length) * 100),
+        100
+      );
       onProgressUpdate(progress);
-      console.log(`Progress: ${progress}% (${i + chunkSize}/${progressList.length}, ${submissionDetails.length})`);  
+      console.log(
+        `Progress: ${progress}% (${i + chunkSize}/${progressList.length}, ${
+          submissionDetails.length
+        })`
+      );
     }
-    await delay(500)
+    await delay(500);
 
     return submissionDetails;
   } catch (error) {
