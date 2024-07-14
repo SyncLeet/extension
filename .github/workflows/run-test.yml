@@ -1,7 +1,7 @@
 name: Run Test
 
 on:
-  push:
+  pull_request:
     paths-ignore:
       - "README.md"
 
