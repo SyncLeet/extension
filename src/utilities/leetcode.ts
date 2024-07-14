@@ -115,6 +115,52 @@ export const fetchSubmissionById = async (
 };
 
 /**
+ * Fetch the topics for a problem by its title slug.
+ * @param session The session cookie
+ * @param titleSlug The title slug of the problem
+ * @returns The topics for the problem
+ */
+export const fetchTopicsBySlug = async (
+  session: string,
+  titleSlug: string
+): Promise<string[]> => {
+  // Define the query
+  const query = `
+    query singleQuestionTopicTags($titleSlug: String!) { 
+      question(titleSlug: $titleSlug) { 
+        topicTags { slug } 
+      } 
+    }
+  `;
+
+  // Send the request
+  const response = await fetch(ENDPOINT, {
+    headers: {
+      "content-type": "application/json",
+      cookie: `LEETCODE_SESSION=${session}`,
+    },
+    body: JSON.stringify({
+      query,
+      variables: { titleSlug },
+      operationName: "singleQuestionTopicTags",
+    }),
+    method: "POST",
+  });
+
+  // Validate the response
+  if (!response.ok) {
+    throw new Error("fetchTopicsBySlug, invalid status");
+  }
+  const { data } = await response.json();
+  if (data === null || data.question === null) {
+    throw new Error("fetchTopicsBySlug, empty response");
+  }
+
+  // Return the parsed details
+  return data.question.topicTags.map((t: any) => t.slug);
+};
+
+/**
  * Response from one item in the progress list query.
  */
 interface Progress {
@@ -257,10 +303,12 @@ export const fetchLastAcceptedId = async (
 /**
  * Fetch the history of submissions from LeetCode.
  * @param session The session cookie
+ * @param reprotFn The function to report progress (i.e. completion of m out of n)
  * @returns The progress and submission history
  */
 export const fetchHistory = async (
-  session: string
+  session: string,
+  reprotFn: (m: number, n: number) => void
 ): Promise<[Progress[], Submission[]]> => {
   // Fetch the progress at each page
   const progress: Progress[] = [];
@@ -282,11 +330,11 @@ export const fetchHistory = async (
       const fn2 = () => fetchSubmissionById(session, acceptedId);
       const submission = await retry(fn2);
       await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
-      console.assert(submission.accepted);
       return submission;
     });
     const resolves = await Promise.all(promises);
     history.push(...resolves);
+    reprotFn(history.length, progress.length);
   }
 
   // Question details and submission details are now available

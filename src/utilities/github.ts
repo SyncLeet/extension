@@ -4,7 +4,6 @@ import { Octokit } from "octokit";
  * Creates a new instance of Octokit with an authentication token.
  * If the token already exists in local storage, it will be used.
  * Otherwise, it initiates the OAuth flow to obtain a new token.
- *
  * @returns A Promise that resolves to an Octokit instance.
  * @throws Error if there is an issue obtaining the authorization code or exchanging it for an access token.
  */
@@ -72,7 +71,6 @@ export const newOctokit = async (): Promise<Octokit> => {
 /**
  * Creates a new repository named "LeetCode" if it doesn't already exist.
  * The repository is created using a template repository and includes autolinks for LeetCode problems.
- *
  * @param octokit - The Octokit instance used for making API requests.
  * @returns A Promise that resolves when the repository and autolinks are created.
  */
@@ -119,7 +117,6 @@ export const newRepository = async (octokit: Octokit) => {
 
 /**
  * Commits the specified changes to the "main" branch of the LeetCode repository.
- *
  * @param octokit - The Octokit instance used for making API requests.
  * @param message - The commit message.
  * @param changes - An array of objects representing the changes to be committed. Each object should have a `path` property specifying the file path and a `content` property specifying the file content.
@@ -169,7 +166,7 @@ export const commitFiles = async (
     }
   );
 
-  // Delete commits that are 30 seconds old
+  // Delete commits that are older than 1 minute
   const currentTime = Date.now();
   Object.keys(githubCommits).forEach((time) => {
     const commitTime = parseInt(time);

@@ -1,4 +1,5 @@
 import { fetchSubmissionById } from "./leetcode";
+import { fetchTopicsBySlug } from "./leetcode";
 import { fetchProgressAtPage } from "./leetcode";
 import { fetchLastAcceptedId } from "./leetcode";
 import { fetchHistory } from "./leetcode";
@@ -45,6 +46,51 @@ describe("LeetCode Module", () => {
       const promise = fetchSubmissionById(session, 1320811270);
       await expect(promise).rejects.toThrow(
         "fetchSubmissionById, empty response"
+      );
+    },
+    2 * 1000
+  );
+
+  test(
+    "fetchTopicsBySlug.toPass.01",
+    async () => {
+      const session = process.env.LEETCODE_SESSION;
+      const topics = await fetchTopicsBySlug(session, "number-of-atoms");
+      expect(topics).toBeDefined();
+      expect(topics).toContain("stack");
+      expect(topics).toContain("string");
+      expect(topics).toContain("hash-table");
+      expect(topics).toContain("sorting");
+    },
+    2 * 1000
+  );
+
+  test(
+    "fetchTopicsBySlug.toPass.02",
+    async () => {
+      const session = process.env.LEETCODE_SESSION;
+      const topics = await fetchTopicsBySlug(
+        session,
+        "regular-expression-matching"
+      );
+      expect(topics).toBeDefined();
+      expect(topics).toContain("string");
+      expect(topics).toContain("dynamic-programming");
+      expect(topics).toContain("recursion");
+    },
+    2 * 1000
+  );
+
+  test(
+    "fetchTopicsBySlug.toFail.01",
+    async () => {
+      const session = process.env.LEETCODE_SESSION;
+      const promise = fetchTopicsBySlug(
+        session,
+        "invalidtitleslugthatdoesnotexist"
+      );
+      await expect(promise).rejects.toThrow(
+        "fetchTopicsBySlug, empty response"
       );
     },
     2 * 1000
@@ -141,17 +187,15 @@ describe("LeetCode Module", () => {
     "fetchHistory.toPass.01",
     async () => {
       const session = process.env.LEETCODE_SESSION;
-      const [progress, history] = await fetchHistory(session);
+      const [progress, history] = await fetchHistory(session, () => {});
       expect(progress).toBeDefined();
-      expect(progress).toBeGreaterThan(0);
       expect(history).toBeDefined();
-      expect(history).toBeGreaterThan(0);
       expect(progress.length).toBe(history.length);
       for (let i = 0; i < progress.length; i++) {
         expect(progress[i].titleSlug).toBe(history[i].titleSlug);
         expect(history[i].accepted).toBe(true);
       }
     },
-    500 * 1000
+    180 * 1000
   );
 });
