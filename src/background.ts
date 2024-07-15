@@ -59,8 +59,8 @@ const runMain = async () => {
                   content: submission.code,
                 });
               }
-              await commitFiles(octokit, message, changes);
               // Notify the user of the successful push
+              await commitFiles(octokit, message, changes);
               chrome.notifications.create({
                 type: "basic",
                 iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
