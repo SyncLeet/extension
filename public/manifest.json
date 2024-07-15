@@ -1,31 +1,28 @@
 {
-	"manifest_version": 3,
-	"name": "SyncLeet",
-	"description": "Synchronize your LeetCode submissions to GitHub. Happy Coding! 🚀",
-	"version": "2.0",
-	"action": {
-		"default_icon": "asset/image/logox48.png",
-		"default_popup": "popup.html"
-	},
-	"icons": {
-		"16": "asset/image/logox16.png",
-		"48": "asset/image/logox48.png",
-		"128": "asset/image/logox128.png"
-	},
-	"permissions": [
-		"webRequest",
-		"storage",
-		"identity",
-		"notifications",
-		"cookies"
-	],
-	"host_permissions": [
-		"https://leetcode.com/*",
-		"https://github.com/*"
-	],
-	"background": {
-		"service_worker": "script/background.js",
-		"type": "module"
-	},
-	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjoheGLIBmdE+rr8SE3SLj8U/F+obTZiLX21JUBFaULAXCR8NvIaISu3VWHm2tJFcbiLb2n9PgbVxOtU0IxtsCvxdrPtLl6G9JdsIzs3FJehahMOZPnQ0gO2OXOS0em3mYICTNHQXb2zyh2DDCwL4kIA9zlmG4c/dtM7rtlQ098usIudVevQEMBvkYk+Cn1ZSE+4TDFPboYpN+o5MDGjnW0Iu8eX4mjPspTtTjOIsuWhfdeN2czSnSr6WLaI/w4Hyuc0Xjk2xEZJ91q+UyD6nXEejAxsG0zSmMaWr+ZbncqusuWaajFKZgC7C2Pmnobdmx5DQ7ZWScwAfNvWVe2otWwIDAQAB"
+  "manifest_version": 3,
+  "name": "SyncLeet",
+  "description": "Synchronize your LeetCode submissions to GitHub. Happy Coding! 🚀",
+  "version": "2.0",
+  "action": {
+    "default_icon": "asset/image/logox48.png",
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "asset/image/logox16.png",
+    "48": "asset/image/logox48.png",
+    "128": "asset/image/logox128.png"
+  },
+  "permissions": [
+    "webRequest",
+    "storage",
+    "identity",
+    "notifications",
+    "cookies"
+  ],
+  "host_permissions": ["https://leetcode.com/*", "https://github.com/*"],
+  "background": {
+    "service_worker": "script/background.js",
+    "type": "module"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjoheGLIBmdE+rr8SE3SLj8U/F+obTZiLX21JUBFaULAXCR8NvIaISu3VWHm2tJFcbiLb2n9PgbVxOtU0IxtsCvxdrPtLl6G9JdsIzs3FJehahMOZPnQ0gO2OXOS0em3mYICTNHQXb2zyh2DDCwL4kIA9zlmG4c/dtM7rtlQ098usIudVevQEMBvkYk+Cn1ZSE+4TDFPboYpN+o5MDGjnW0Iu8eX4mjPspTtTjOIsuWhfdeN2czSnSr6WLaI/w4Hyuc0Xjk2xEZJ91q+UyD6nXEejAxsG0zSmMaWr+ZbncqusuWaajFKZgC7C2Pmnobdmx5DQ7ZWScwAfNvWVe2otWwIDAQAB"
 }

@@ -10,7 +10,6 @@ const buildFolder = path.resolve(__dirname, "dist");
 const config: webpack.Configuration = {
   mode: "production",
   entry: {
-    foreground: path.resolve(sourceFolder, "foreground.ts"),
     background: path.resolve(sourceFolder, "background.ts"),
     popup: path.resolve(sourceFolder, "popup.ts"),
   },
