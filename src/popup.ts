@@ -46,8 +46,7 @@ function handleFetchAllSubmissionHistory(button: HTMLInputElement): void {
     {'url': 'https://leetcode.com', 'name': 'LEETCODE_SESSION'},
     (cookie) => {
       fetchHistory(cookie.value, (m, n) => {
-        console.log(`Progress: ${m} / ${n}`);
-        updateProgressBar(progressContainer, m / n * 100);
+        updateProgressBar(progressContainer, parseFloat((m / n * 100).toFixed(2)));
     })
         .then(async ([progress, submissions]) => {
           const octokit = await newOctokit();
