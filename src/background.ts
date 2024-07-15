@@ -1,5 +1,6 @@
 import { newOctokit, commitFiles, newRepository } from "./utilities/github";
-import { fetchSubmissionById } from "./utilities/leetcode";
+import { fetchSubmissionById, fetchTopicsBySlug } from "./utilities/leetcode";
+import { EXTENSION } from "./utilities/leetcode";
 
 const runMain = async () => {
   /**
@@ -32,16 +33,40 @@ const runMain = async () => {
       if (request.operationName == "submissionDetails") {
         const submissionId = request.variables.submissionId;
         if (submitted.delete(submissionId)) {
+          // Fetch the session cookie from LeetCode
           chrome.cookies.get(
             {
               url: "https://leetcode.com",
               name: "LEETCODE_SESSION",
             },
             async (cookie) => {
+              // Fetch the submission and its question topics
               const submission = await fetchSubmissionById(
                 cookie.value,
                 submissionId
               );
+              const topics = await fetchTopicsBySlug(
+                cookie.value,
+                submission.titleSlug
+              );
+              // Synchronize to GitHub on a topic-by-topic basis
+              const { titleSlug, runtime, memory, language } = submission;
+              const message = `LC-${titleSlug} [Runtime: ${runtime}; Memory: ${memory}]`;
+              const changes: { path: string; content: string }[] = [];
+              for (const topicSlug of topics) {
+                changes.push({
+                  path: `${topicSlug}/${titleSlug}.${EXTENSION[language]}`,
+                  content: submission.code,
+                });
+              }
+              await commitFiles(octokit, message, changes);
+              // Notify the user of the successful push
+              chrome.notifications.create({
+                type: "basic",
+                iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
+                title: "SyncLeet: Pushed to GitHub",
+                message: `Question: ${submission.title}`,
+              });
             }
           );
         }

@@ -8,7 +8,7 @@ const ENDPOINT = "https://leetcode.com/graphql/";
 /**
  * Mapping from language names to file extensions.
  */
-const LANGUAGE = {
+export const EXTENSION: { [key: string]: string } = {
   cpp: "cpp",
   java: "java",
   python: "py",
