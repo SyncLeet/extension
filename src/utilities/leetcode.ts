@@ -324,16 +324,23 @@ export const fetchHistory = async (
   const history: Submission[] = [];
   for (let i = 0; i < progress.length; i += 4) {
     const promises = progress.slice(i, i + 4).map(async (item, idx) => {
-      const fn1 = () => fetchLastAcceptedId(session, item.titleSlug);
-      const acceptedId = await retry(fn1);
-      await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
-      const fn2 = () => fetchSubmissionById(session, acceptedId);
-      const submission = await retry(fn2);
-      await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
-      return submission;
+      try {
+        const fn1 = () => fetchLastAcceptedId(session, item.titleSlug);
+        const acceptedId = await retry(fn1);
+        await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
+        const fn2 = () => fetchSubmissionById(session, acceptedId);
+        const submission = await retry(fn2);
+        await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
+        return submission;
+      } catch (error) {
+        if (error instanceof Error) {
+          return null;
+        }
+      }
     });
-    const resolves = await Promise.all(promises);
-    history.push(...resolves);
+    const resolves = await Promise.all(promises)
+    const filtered = resolves.filter((item) => item !== null);
+    history.push(...filtered);
     reprotFn(history.length, progress.length);
   }
 
