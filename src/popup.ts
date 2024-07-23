@@ -15,9 +15,12 @@ function initialize(): void {
 // Setup checkbox functionality
 function setupCheckbox(): void {
   const checkbox = document.getElementById("shouldNotify") as HTMLInputElement;
-  chrome.storage.local.get("shouldNotify", (data: { shouldNotify: boolean }): void => {
-    checkbox.checked = data.shouldNotify;
-  });
+  chrome.storage.local.get(
+    "shouldNotify",
+    (data: { shouldNotify: boolean }): void => {
+      checkbox.checked = data.shouldNotify;
+    }
+  );
   checkbox.addEventListener("change", function (): void {
     chrome.storage.local.set({ shouldNotify: this.checked });
   });
@@ -25,12 +28,16 @@ function setupCheckbox(): void {
 
 // Setup button functionality
 function setupButton(): void {
-  const button = document.getElementById("fetchAllHistoriesBtn") as HTMLInputElement;
+  const button = document.getElementById(
+    "fetchAllHistoriesBtn"
+  ) as HTMLInputElement;
   if (!button) {
     console.error("Button not found");
     return;
   }
-  button.addEventListener("click", () => handleFetchAllSubmissionHistory(button));
+  button.addEventListener("click", () =>
+    handleFetchAllSubmissionHistory(button)
+  );
 }
 
 // Handle fetching all submission history
@@ -40,23 +47,28 @@ function handleFetchAllSubmissionHistory(button: HTMLInputElement): void {
   const syncHistoryElement = document.getElementById("fetchAllHistoriesBtn");
   const progressContainer = createProgressContainer();
 
-  syncHistoryElement.insertAdjacentElement('beforebegin', progressContainer);
+  syncHistoryElement.insertAdjacentElement("beforebegin", progressContainer);
 
   chrome.cookies.get(
-    {'url': 'https://leetcode.com', 'name': 'LEETCODE_SESSION'},
+    { url: "https://leetcode.com", name: "LEETCODE_SESSION" },
     (cookie) => {
       fetchHistory(cookie.value, (m, n) => {
-        updateProgressBar(progressContainer, parseFloat((m / n * 100).toFixed(2)));
-    })
+        updateProgressBar(
+          progressContainer,
+          parseFloat(((m / n) * 100).toFixed(2))
+        );
+      })
         .then(async ([progress, submissions]) => {
           const octokit = await newOctokit();
-          const changes: {path: string, content: string}[] = [];
+          const changes: { path: string; content: string }[] = [];
           const message = "Synchronize exisiting submission history";
           for (let i = 0; i < submissions.length; i++) {
             const { topicTags: topics } = progress[i];
             const submission = submissions[i];
             console.log(progress[i], submissions[i]);
-            if (submission === null) { continue; }
+            if (submission === null) {
+              continue;
+            }
             // Synchronize to GitHub on a topic-by-topic basis
             const { titleSlug, language } = submission;
             for (const topicSlug of topics) {
@@ -67,7 +79,10 @@ function handleFetchAllSubmissionHistory(button: HTMLInputElement): void {
             }
           }
           // Notify the user of the successful push
-          await commitFiles(octokit, message, changes);
+          chrome.runtime.sendMessage({
+            type: "commitFiles",
+            payload: { message, changes },
+          });
           chrome.notifications.create({
             type: "basic",
             iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
@@ -83,13 +98,14 @@ function handleFetchAllSubmissionHistory(button: HTMLInputElement): void {
           startCountdown(button, originalButtonText);
         });
     }
-  )
+  );
 }
 
 // Create progress container element
 function createProgressContainer(): HTMLDivElement {
-  const progressContainer = document.createElement('div');
-  progressContainer.className = 'progress-container justify-content-between align-items-center';
+  const progressContainer = document.createElement("div");
+  progressContainer.className =
+    "progress-container justify-content-between align-items-center";
 
   const infoRow = createInfoRow();
   progressContainer.appendChild(infoRow);
@@ -105,11 +121,11 @@ function createProgressContainer(): HTMLDivElement {
 
 // Create info row element
 function createInfoRow(): HTMLDivElement {
-  const infoRow = document.createElement('div');
-  infoRow.className = 'info-row';
-  infoRow.style.display = 'flex';
-  infoRow.style.justifyContent = 'space-between';
-  infoRow.style.alignItems = 'center';
+  const infoRow = document.createElement("div");
+  infoRow.className = "info-row";
+  infoRow.style.display = "flex";
+  infoRow.style.justifyContent = "space-between";
+  infoRow.style.alignItems = "center";
 
   const percentageText = createPercentageText();
   infoRow.appendChild(percentageText);
@@ -125,8 +141,8 @@ function createInfoRow(): HTMLDivElement {
 
 // Create progress bar row element
 function createProgressBarRow(): HTMLDivElement {
-  const progressBarRow = document.createElement('div');
-  progressBarRow.className = 'progress-bar-row';
+  const progressBarRow = document.createElement("div");
+  progressBarRow.className = "progress-bar-row";
 
   const progressDiv = createProgressDiv();
   progressBarRow.appendChild(progressDiv);
@@ -136,32 +152,32 @@ function createProgressBarRow(): HTMLDivElement {
 
 // Create percentage text element
 function createPercentageText(): HTMLParagraphElement {
-  const percentageText = document.createElement('p');
-  percentageText.className = 'percentage-text';
-  percentageText.textContent = '0%';
+  const percentageText = document.createElement("p");
+  percentageText.className = "percentage-text";
+  percentageText.textContent = "0%";
   return percentageText;
 }
 
 // Create middle text element
 function createMiddleText(): HTMLParagraphElement {
-  const middleText = document.createElement('p');
-  middleText.className = 'middle-text';
-  middleText.textContent = 'Sync in progress...';
+  const middleText = document.createElement("p");
+  middleText.className = "middle-text";
+  middleText.textContent = "Sync in progress...";
   return middleText;
 }
 
 // Create countdown text element
 function createCountdownText(): HTMLParagraphElement {
-  const countdownText = document.createElement('p');
-  countdownText.className = 'countdown-text';
-  countdownText.textContent = 's left';
+  const countdownText = document.createElement("p");
+  countdownText.className = "countdown-text";
+  countdownText.textContent = "s left";
   return countdownText;
 }
 
 // Create progress div element
 function createProgressDiv(): HTMLDivElement {
-  const progressDiv = document.createElement('div');
-  progressDiv.className = 'progress';
+  const progressDiv = document.createElement("div");
+  progressDiv.className = "progress";
 
   const progressBar = createProgressBar();
   progressDiv.appendChild(progressBar);
@@ -171,23 +187,24 @@ function createProgressDiv(): HTMLDivElement {
 
 // Create progress bar element
 function createProgressBar(): HTMLDivElement {
-  const progressBar = document.createElement('div');
-  progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated';
-  progressBar.setAttribute('role', 'progressbar');
-  progressBar.setAttribute('aria-valuenow', '0');
-  progressBar.setAttribute('aria-valuemin', '0');
-  progressBar.setAttribute('aria-valuemax', '100');
-  progressBar.style.width = '0%';
-  progressBar.style.setProperty('color', '#FFA115', 'important');
+  const progressBar = document.createElement("div");
+  progressBar.className =
+    "progress-bar progress-bar-striped progress-bar-animated";
+  progressBar.setAttribute("role", "progressbar");
+  progressBar.setAttribute("aria-valuenow", "0");
+  progressBar.setAttribute("aria-valuemin", "0");
+  progressBar.setAttribute("aria-valuemax", "100");
+  progressBar.style.width = "0%";
+  progressBar.style.setProperty("color", "#FFA115", "important");
   return progressBar;
 }
 
 // Create bottom text element
 function createBottomText(): HTMLParagraphElement {
-  const bottomText = document.createElement('p');
-  bottomText.textContent = 'Do not close this popup while synchronizing';
-  bottomText.style.color = 'grey';
-  bottomText.style.textAlign = 'center';
+  const bottomText = document.createElement("p");
+  bottomText.textContent = "Do not close this popup while synchronizing";
+  bottomText.style.color = "grey";
+  bottomText.style.textAlign = "center";
   return bottomText;
 }
 
@@ -195,20 +212,29 @@ function createBottomText(): HTMLParagraphElement {
 let startTime: number | null = null;
 
 // Update progress bar
-function updateProgressBar(progressContainer: HTMLDivElement, progress: number): void {
+function updateProgressBar(
+  progressContainer: HTMLDivElement,
+  progress: number
+): void {
   if (!startTime) startTime = Date.now();
 
-  const progressBar = progressContainer.querySelector('.progress-bar') as HTMLDivElement;
-  const percentageText = progressContainer.querySelector('.percentage-text') as HTMLParagraphElement;
-  const countdownText = progressContainer.querySelector('.countdown-text') as HTMLParagraphElement;
+  const progressBar = progressContainer.querySelector(
+    ".progress-bar"
+  ) as HTMLDivElement;
+  const percentageText = progressContainer.querySelector(
+    ".percentage-text"
+  ) as HTMLParagraphElement;
+  const countdownText = progressContainer.querySelector(
+    ".countdown-text"
+  ) as HTMLParagraphElement;
 
   if (!progressBar || !percentageText || !countdownText) {
-    console.error('A required progress element was not found');
+    console.error("A required progress element was not found");
     return;
   }
 
   progressBar.style.width = `${progress}%`;
-  progressBar.setAttribute('aria-valuenow', progress.toString());
+  progressBar.setAttribute("aria-valuenow", progress.toString());
   percentageText.textContent = `${progress}%`;
 
   if (progress > 0) {
@@ -225,9 +251,12 @@ function updateProgressBar(progressContainer: HTMLDivElement, progress: number):
 }
 
 // Start countdown
-function startCountdown(button: HTMLInputElement, originalButtonText: string): void {
+function startCountdown(
+  button: HTMLInputElement,
+  originalButtonText: string
+): void {
   // Calculate target end time instead of countdown
-  chrome.storage.local.get(['endTime'], (result) => {
+  chrome.storage.local.get(["endTime"], (result) => {
     let endTime = result.endTime;
     if (!endTime) {
       const countdownDuration = 60 * 1000;
@@ -238,7 +267,11 @@ function startCountdown(button: HTMLInputElement, originalButtonText: string): v
   });
 }
 
-function updateCountdown(button: HTMLInputElement, originalButtonText: string, endTime: number): void {
+function updateCountdown(
+  button: HTMLInputElement,
+  originalButtonText: string,
+  endTime: number
+): void {
   const update = () => {
     const currentTime = Date.now();
     let countdown = Math.ceil((endTime - currentTime) / 1000);
@@ -247,7 +280,7 @@ function updateCountdown(button: HTMLInputElement, originalButtonText: string, e
       button.textContent = `${originalButtonText} (${countdown}s)`;
     } else {
       clearInterval(interval);
-      chrome.storage.local.remove(['endTime'], () => {
+      chrome.storage.local.remove(["endTime"], () => {
         button.textContent = originalButtonText;
         button.disabled = false;
       });
@@ -260,10 +293,12 @@ function updateCountdown(button: HTMLInputElement, originalButtonText: string, e
 
 // Function to continue countdown if needed
 function continueCountdownIfNeeded(): void {
-  const button = document.getElementById("fetchAllHistoriesBtn") as HTMLInputElement;
+  const button = document.getElementById(
+    "fetchAllHistoriesBtn"
+  ) as HTMLInputElement;
   const originalButtonText = button.textContent || "Fetch All Histories";
 
-  chrome.storage.local.get(['endTime'], (result) => {
+  chrome.storage.local.get(["endTime"], (result) => {
     if (result.endTime && Date.now() < result.endTime) {
       button.disabled = true;
       updateCountdown(button, originalButtonText, result.endTime);
@@ -272,7 +307,11 @@ function continueCountdownIfNeeded(): void {
 }
 
 // Handle error
-function handleError(button: HTMLInputElement, originalButtonText: string, error: Error): void {
+function handleError(
+  button: HTMLInputElement,
+  originalButtonText: string,
+  error: Error
+): void {
   console.error("Failed to fetch all submission history:", error);
   button.value = originalButtonText;
   button.disabled = false;

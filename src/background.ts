@@ -10,6 +10,21 @@ const runMain = async () => {
   await newRepository(octokit);
 
   /**
+   * Listen for files commit
+   */
+  chrome.runtime.onMessage.addListener(async (message) => {
+    const { type, payload } = message;
+    switch (type) {
+      case "commitFiles": {
+        const { message, changes } = payload;
+        await commitFiles(octokit, message, changes);
+        break;
+      }
+    }
+    return true;
+  });
+
+  /**
    * Listen for submission checks
    */
   const submitted = new Set<number>();
