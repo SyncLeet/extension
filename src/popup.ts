@@ -52,9 +52,11 @@ function handleFetchAllSubmissionHistory(button: HTMLInputElement): void {
           const octokit = await newOctokit();
           const changes: {path: string, content: string}[] = [];
           const message = "Synchronize exisiting submission history";
-          for (let i = 0; i < progress.length; i++) {
+          for (let i = 0; i < submissions.length; i++) {
             const { topicTags: topics } = progress[i];
             const submission = submissions[i];
+            console.log(progress[i], submissions[i]);
+            if (submission === null) { continue; }
             // Synchronize to GitHub on a topic-by-topic basis
             const { titleSlug, language } = submission;
             for (const topicSlug of topics) {

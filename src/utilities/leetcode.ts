@@ -309,7 +309,7 @@ export const fetchLastAcceptedId = async (
 export const fetchHistory = async (
   session: string,
   reprotFn: (m: number, n: number) => void
-): Promise<[Progress[], Submission[]]> => {
+): Promise<[Progress[], (Submission | null)[]]> => {
   // Fetch the progress at each page
   const progress: Progress[] = [];
   var [pageNo, hasMore] = [1, true];
@@ -321,12 +321,14 @@ export const fetchHistory = async (
   }
 
   // Fetch the submission details for each item
-  const history: Submission[] = [];
+  const history: (Submission | null)[] = [];
   for (let i = 0; i < progress.length; i += 4) {
     const promises = progress.slice(i, i + 4).map(async (item, idx) => {
       try {
+        console.log(`Fetching last accepted ID for ${item.titleSlug}`);
         const fn1 = () => fetchLastAcceptedId(session, item.titleSlug);
         const acceptedId = await retry(fn1);
+        console.log('acceptedId', acceptedId);
         if (acceptedId === null) { return null; }
         await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
         const fn2 = () => fetchSubmissionById(session, acceptedId);
@@ -340,8 +342,7 @@ export const fetchHistory = async (
       }
     });
     const resolves = await Promise.all(promises);
-    const filtered = resolves.filter((item) => item !== null);
-    history.push(...filtered);
+    history.push(...resolves);
     reprotFn(history.length, progress.length);
   }
 
