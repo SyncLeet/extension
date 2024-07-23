@@ -246,7 +246,7 @@ export const fetchProgressAtPage = async (
 export const fetchLastAcceptedId = async (
   session: string,
   titleSlug: string
-): Promise<number> => {
+): Promise<number | null> => {
   // Define the query
   const query = `
     query submissionList($offset: Int!, $limit: Int!, $lastKey: String, $questionSlug: String!, $lang: Int, $status: Int) {
@@ -297,7 +297,7 @@ export const fetchLastAcceptedId = async (
 
   // Parse the response
   const { submissions } = data.questionSubmissionList;
-  return parseInt(submissions[0].id);
+  return submissions.length > 0 ? parseInt(submissions[0].id) : null;
 };
 
 /**
@@ -327,6 +327,7 @@ export const fetchHistory = async (
       try {
         const fn1 = () => fetchLastAcceptedId(session, item.titleSlug);
         const acceptedId = await retry(fn1);
+        if (acceptedId === null) { return null; }
         await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
         const fn2 = () => fetchSubmissionById(session, acceptedId);
         const submission = await retry(fn2);
@@ -338,7 +339,7 @@ export const fetchHistory = async (
         }
       }
     });
-    const resolves = await Promise.all(promises)
+    const resolves = await Promise.all(promises);
     const filtered = resolves.filter((item) => item !== null);
     history.push(...filtered);
     reprotFn(history.length, progress.length);
