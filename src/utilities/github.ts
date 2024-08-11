@@ -91,7 +91,6 @@ export const newRepository = async (octokit: Octokit) => {
   // Wait for the repository to be created
   while (true) {
     await new Promise((resolve) => setTimeout(resolve, 3000));
-    console.log("Checking if repository is created...");
     const { data } = await octokit.rest.repos.listForAuthenticatedUser();
     const repository = data.find((repo) => repo.name === "LeetCode");
     if (repository) {

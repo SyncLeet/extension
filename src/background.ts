@@ -76,12 +76,21 @@ const runMain = async () => {
               }
               // Notify the user of the successful push
               await commitFiles(octokit, message, changes);
-              chrome.notifications.create({
-                type: "basic",
-                iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
-                title: "SyncLeet: Pushed to GitHub",
-                message: `Question: ${submission.title}`,
-              });
+              chrome.storage.local.get(
+                "shouldNotify",
+                (data: { shouldNotify: boolean }): void => {
+                  if (data.shouldNotify) {
+                    chrome.notifications.create({
+                      type: "basic",
+                      iconUrl: chrome.runtime.getURL(
+                        "asset/image/logox128.png"
+                      ),
+                      title: "SyncLeet: Pushed to GitHub",
+                      message: `Question: ${submission.title}`,
+                    });
+                  }
+                }
+              );
             }
           );
         }

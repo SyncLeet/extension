@@ -325,10 +325,8 @@ export const fetchHistory = async (
   for (let i = 0; i < progress.length; i += 4) {
     const promises = progress.slice(i, i + 4).map(async (item, idx) => {
       try {
-        console.log(`Fetching last accepted ID for ${item.titleSlug}`);
         const fn1 = () => fetchLastAcceptedId(session, item.titleSlug);
         const acceptedId = await retry(fn1);
-        console.log('acceptedId', acceptedId);
         if (acceptedId === null) { return null; }
         await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
         const fn2 = () => fetchSubmissionById(session, acceptedId);
