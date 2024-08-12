@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", initialize);
 function initialize(): void {
   setupCheckbox();
   setupButton();
+  continueCountdownIfNeeded();
 }
 
 // Setup checkbox functionality
@@ -59,46 +60,62 @@ function handleFetchAllSubmissionHistory(button: HTMLInputElement): void {
       })
         .then(async ([progress, submissions]) => {
           const octokit = await newOctokit();
-          const changes: { path: string; content: string }[] = [];
-          const message = "Synchronize exisiting submission history";
-          for (let i = 0; i < submissions.length; i++) {
-            const { topicTags: topics } = progress[i];
-            const submission = submissions[i];
-            if (submission === null) {
-              continue;
-            }
-            // Synchronize to GitHub on a topic-by-topic basis
-            const { titleSlug, language } = submission;
-            for (const topicSlug of topics) {
-              changes.push({
-                path: `${topicSlug}/${titleSlug}.${EXTENSION[language]}`,
-                content: submission.code,
-              });
-            }
-          }
-          // Notify the user of the successful push
-          chrome.runtime.sendMessage({
-            type: "commitFiles",
-            payload: { message, changes },
-          });
-          chrome.storage.local.get(
-            "shouldNotify",
-            (data: { shouldNotify: boolean }): void => {
-              if (data.shouldNotify) {
-                chrome.notifications.create({
-                  type: "basic",
-                  iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
-                  title: "SyncLeet: Pushed to GitHub",
-                  message: `Existing ${progress.length} submission histories.`,
+          const batchSize = 75;
+          const totalBatches = Math.ceil(submissions.length / batchSize);
+
+          for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+            const start = batchIndex * batchSize;
+            const end = Math.min(start + batchSize, submissions.length);
+            const batchSubmissions = submissions.slice(start, end);
+            const batchProgress = progress.slice(start, end);
+            const changes: { path: string; content: string }[] = [];
+            const message = `Synchronize existing submission history (${batchIndex + 1}/${totalBatches})`;
+
+            for (let i = 0; i < batchSubmissions.length; i++) {
+              const { topicTags: topics } = batchProgress[i];
+              const submission = batchSubmissions[i];
+              if (submission === null) {
+                continue;
+              }
+              const { titleSlug, language } = submission;
+              for (const topicSlug of topics) {
+                changes.push({
+                  path: `${topicSlug}/${titleSlug}.${EXTENSION[language]}`,
+                  content: submission.code,
                 });
               }
             }
-          );
+
+            // Notify the user of the successful push
+            await chrome.runtime.sendMessage({
+              type: "commitFiles",
+              payload: { message, changes },
+            });
+            chrome.storage.local.get(
+              "shouldNotify",
+              (data: { shouldNotify: boolean }): void => {
+                if (data.shouldNotify) {
+                  chrome.notifications.create({
+                    type: "basic",
+                    iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
+                    title: "SyncLeet: Pushed to GitHub",
+                    message: `Existing ${progress.length} submission histories.`,
+                  });
+                }
+              }
+            );
+            
+            console.log("Waiting for 10 seconds before next batch...");
+            await new Promise((resolve) => setTimeout(resolve, 10000));
+          }
         })
         .then(() => {
           progressContainer.remove();
         })
-        .catch((error) => handleError(button, originalButtonText, error));
+        .catch((error) => handleError(button, originalButtonText, error))
+        .finally(() => {
+          startCountdown(button, originalButtonText);
+        });
     }
   );
 }
@@ -135,6 +152,9 @@ function createInfoRow(): HTMLDivElement {
   const middleText = createMiddleText();
   infoRow.appendChild(middleText);
 
+  const countdownText = createCountdownText();
+  infoRow.appendChild(countdownText);
+
   return infoRow;
 }
 
@@ -163,6 +183,14 @@ function createMiddleText(): HTMLParagraphElement {
   middleText.className = "middle-text";
   middleText.textContent = "Sync in progress...";
   return middleText;
+}
+
+// Create countdown text element
+function createCountdownText(): HTMLParagraphElement {
+  const countdownText = document.createElement("p");
+  countdownText.className = "countdown-text";
+  countdownText.textContent = "s left";
+  return countdownText;
 }
 
 // Create progress div element
@@ -215,7 +243,11 @@ function updateProgressBar(
   const percentageText = progressContainer.querySelector(
     ".percentage-text"
   ) as HTMLParagraphElement;
-  if (!progressBar || !percentageText) {
+  const countdownText = progressContainer.querySelector(
+    ".countdown-text"
+  ) as HTMLParagraphElement;
+
+  if (!progressBar || !percentageText || !countdownText) {
     console.error("A required progress element was not found");
     return;
   }
@@ -228,12 +260,69 @@ function updateProgressBar(
     const elapsedTime = (Date.now() - startTime) / 1000; // in seconds
     const estimatedTotalTime = elapsedTime / (progress / 100);
     const timeLeft = estimatedTotalTime - elapsedTime;
+    countdownText.textContent = `${Math.ceil(timeLeft)}s left`;
   }
 
   if (progress === 100) {
     progressContainer.remove();
     startTime = null; // Reset startTime for the next operation
   }
+}
+
+// Start countdown
+function startCountdown(
+  button: HTMLInputElement,
+  originalButtonText: string
+): void {
+  // Calculate target end time instead of countdown
+  chrome.storage.local.get(["endTime"], (result) => {
+    let endTime = result.endTime;
+    if (!endTime) {
+      const countdownDuration = 60 * 1000;
+      endTime = Date.now() + countdownDuration;
+      chrome.storage.local.set({ endTime: endTime });
+    }
+    updateCountdown(button, originalButtonText, endTime);
+  });
+}
+
+function updateCountdown(
+  button: HTMLInputElement,
+  originalButtonText: string,
+  endTime: number
+): void {
+  const update = () => {
+    const currentTime = Date.now();
+    let countdown = Math.ceil((endTime - currentTime) / 1000);
+
+    if (countdown > 0) {
+      button.textContent = `${originalButtonText} (${countdown}s)`;
+    } else {
+      clearInterval(interval);
+      chrome.storage.local.remove(["endTime"], () => {
+        button.textContent = originalButtonText;
+        button.disabled = false;
+      });
+    }
+  };
+
+  update(); // Update immediately to avoid delay
+  const interval = setInterval(update, 1000);
+}
+
+// Function to continue countdown if needed
+function continueCountdownIfNeeded(): void {
+  const button = document.getElementById(
+    "fetchAllHistoriesBtn"
+  ) as HTMLInputElement;
+  const originalButtonText = button.textContent || "Fetch All Histories";
+
+  chrome.storage.local.get(["endTime"], (result) => {
+    if (result.endTime && Date.now() < result.endTime) {
+      button.disabled = true;
+      updateCountdown(button, originalButtonText, result.endTime);
+    }
+  });
 }
 
 // Handle error
