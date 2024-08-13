@@ -1,13 +1,22 @@
 import { handleFetchAllSubmissionHistory, continueCountdownIfNeeded } from "./utilities/fetchHistoryHandler";
+declare const bootstrap: any;
 
 // Event listener for DOM content loaded
 document.addEventListener("DOMContentLoaded", initialize);
 
 // Initialization function
 function initialize(): void {
+  initializeTooltips();
   setupCheckbox();
   setupButton();
   continueCountdownIfNeeded();
+  addBadgeIfBeforeDate();
+}
+
+// Initialize tooltips
+function initializeTooltips(): void {
+  const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  const tooltipList = tooltipTriggerList.map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 }
 
 // Setup checkbox functionality
@@ -36,4 +45,23 @@ function setupButton(): void {
   button.addEventListener("click", () =>
     handleFetchAllSubmissionHistory(button)
   );
+}
+
+function addBadgeIfBeforeDate(): void {
+  const endDate = new Date("2024-10-27T23:59:59");
+  const currentDate = new Date();
+
+  if (currentDate <= endDate) {
+    const settingsContainer = document.querySelector(".fetch-history-container");
+    if (settingsContainer) {
+      const badgeHTML = `
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+          New
+        </span>`;
+      const h6Element = settingsContainer.querySelector("h6.position-relative");
+      if (h6Element) {
+        h6Element.innerHTML += badgeHTML;
+      }
+    }
+  }
 }
