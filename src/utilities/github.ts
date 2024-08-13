@@ -76,22 +76,34 @@ export const newOctokit = async (): Promise<Octokit> => {
  */
 export const newRepository = async (octokit: Octokit) => {
   // Check if the repository already exists
-  const { data } = await octokit.rest.repos.listForAuthenticatedUser();
+  const { data } = await octokit.rest.repos.listForAuthenticatedUser({
+    headers: { 'Cache-Control': 'no-cache' }  // Forces a fresh request
+  });
+  
   if (data.find((repo) => repo.name === "LeetCode")) {
     return;
   }
+
   // Create the repository using a template
-  await octokit.rest.repos.createUsingTemplate({
-    template_owner: "SyncLeet",
-    template_repo: "template",
-    name: "LeetCode",
-    description: "Sync: LeetCode -> GitHub",
-    private: false,
-  });
+  try {
+    await octokit.rest.repos.createUsingTemplate({
+      template_owner: "SyncLeet",
+      template_repo: "template",
+      name: "LeetCode",
+      description: "Sync: LeetCode -> GitHub",
+      private: false,
+    });
+  } catch (error) {
+    console.error("Failed to create repository using template:", error);
+    return;
+  }
+
   // Wait for the repository to be created
   while (true) {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    const { data } = await octokit.rest.repos.listForAuthenticatedUser();
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const { data } = await octokit.rest.repos.listForAuthenticatedUser({
+      headers: { 'Cache-Control': 'no-cache' }  // Forces a fresh request
+    });
     const repository = data.find((repo) => repo.name === "LeetCode");
     if (repository) {
       // Check if autolinks for LeetCode problems already exist
