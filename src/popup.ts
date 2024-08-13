@@ -1,22 +1,14 @@
 import { handleFetchAllSubmissionHistory, continueCountdownIfNeeded } from "./utilities/fetchHistoryHandler";
-declare const bootstrap: any;
 
 // Event listener for DOM content loaded
 document.addEventListener("DOMContentLoaded", initialize);
 
 // Initialization function
 function initialize(): void {
-  initializeTooltips();
   setupCheckbox();
   setupButton();
   continueCountdownIfNeeded();
   addBadgeIfBeforeDate();
-}
-
-// Initialize tooltips
-function initializeTooltips(): void {
-  const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  const tooltipList = tooltipTriggerList.map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 }
 
 // Setup checkbox functionality
