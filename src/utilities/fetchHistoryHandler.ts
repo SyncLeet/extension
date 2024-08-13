@@ -1,8 +1,14 @@
 import { fetchHistory } from "./leetcode";
 import { EXTENSION } from "./leetcode";
 
+// Global variables for batches and progress
+let globalBatchIndex = 0;
+let globalTotalBatches = 0;
+let startTime: number | null = null;
+let progressCompleted = false;
+
 // Handle fetching all submission history
-export function handleFetchAllSubmissionHistory(button: HTMLInputElement): void {
+export async function handleFetchAllSubmissionHistory(button: HTMLInputElement): Promise<void> {
   button.disabled = true;
   const originalButtonText = button.textContent;
   const syncHistoryElement = document.getElementById("fetchAllHistoriesBtn");
@@ -21,15 +27,16 @@ export function handleFetchAllSubmissionHistory(button: HTMLInputElement): void 
       })
         .then(async ([progress, submissions]) => {
           const batchSize = 50;
-          const totalBatches = Math.ceil(submissions.length / batchSize);
+          globalTotalBatches = Math.ceil(submissions.length / batchSize);
+          updateProgressBar(progressContainer, 100);
 
-          for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+          for (let batchIndex = 0; batchIndex < globalTotalBatches; batchIndex++) {
             const start = batchIndex * batchSize;
             const end = Math.min(start + batchSize, submissions.length);
             const batchSubmissions = submissions.slice(start, end);
             const batchProgress = progress.slice(start, end);
             const changes: { path: string; content: string }[] = [];
-            const message = `Synchronize existing submission history (${batchIndex + 1}/${totalBatches})`;
+            const message = `Synchronize existing submission history (${batchIndex + 1}/${globalTotalBatches})`;
 
             for (let i = 0; i < batchSubmissions.length; i++) {
               const { topicTags: topics } = batchProgress[i];
@@ -51,6 +58,13 @@ export function handleFetchAllSubmissionHistory(button: HTMLInputElement): void 
               type: "commitFiles",
               payload: { message, changes },
             });
+
+            await new Promise((resolve) => setTimeout(resolve, 10000));
+
+            // Store batchIndex
+            globalBatchIndex = batchIndex + 1;
+            updateProgressBar(progressContainer, 100);
+
             chrome.storage.local.get(
               "shouldNotify",
               (data: { shouldNotify: boolean }): void => {
@@ -59,21 +73,19 @@ export function handleFetchAllSubmissionHistory(button: HTMLInputElement): void 
                     type: "basic",
                     iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
                     title: "SyncLeet: Pushed to GitHub",
-                    message: `Synced ${batchSubmissions.length} submissions (${batchIndex + 1}/${totalBatches}).`,
+                    message: `Synced ${batchSubmissions.length} submissions (${batchIndex + 1}/${globalTotalBatches}).`,
                   });
                 }
               }
             );
-
-            console.log("Waiting for 10 seconds before next batch...");
-            await new Promise((resolve) => setTimeout(resolve, 10000));
           }
         })
         .then(() => {
-          progressContainer.remove();
+          progressCompleted = true;
         })
         .catch((error) => handleError(button, originalButtonText, error))
         .finally(() => {
+          progressContainer.remove();
           startCountdown(button, originalButtonText);
         });
     }
@@ -187,9 +199,6 @@ function createBottomText(): HTMLParagraphElement {
   return bottomText;
 }
 
-// Global variable for start time
-let startTime: number | null = null;
-
 // Update progress bar
 function updateProgressBar(
   progressContainer: HTMLDivElement,
@@ -205,6 +214,9 @@ function updateProgressBar(
   ) as HTMLParagraphElement;
   const countdownText = progressContainer.querySelector(
     ".countdown-text"
+  ) as HTMLParagraphElement;
+  const middleText = progressContainer.querySelector(
+    ".middle-text"
   ) as HTMLParagraphElement;
 
   if (!progressBar || !percentageText || !countdownText) {
@@ -224,8 +236,17 @@ function updateProgressBar(
   }
 
   if (progress === 100) {
-    progressContainer.remove();
-    startTime = null; // Reset startTime for the next operation
+    middleText.textContent = `Finalizing...`;
+    countdownText.textContent = `${globalBatchIndex}/${globalTotalBatches}`;
+
+    const randomDelay = Math.floor(Math.random() * (10000 - 7000 + 1)) + 7000; // Random delay between 7000ms (7s) and 10000ms (10s)
+
+    setTimeout(() => {
+      if (progressCompleted) {
+        progressContainer.remove();
+        startTime = null; // Reset startTime for the next operation
+      }
+    }, randomDelay);
   }
 }
 
@@ -291,6 +312,7 @@ function handleError(
   originalButtonText: string,
   error: Error
 ): void {
+  startCountdown(button, originalButtonText);
   console.error("Failed to fetch all submission history:", error);
   button.value = originalButtonText;
   button.disabled = false;
