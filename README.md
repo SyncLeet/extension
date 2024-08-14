@@ -1,6 +1,6 @@
 # SyncLeet
 
-![Build Check](https://github.com/SyncLeet/extension/actions/workflows/build-check.yml/badge.svg)
+![Build Check](https://github.com/SyncLeet/extension/actions/workflows/run-test.yml/badge.svg)
 
 Synchronize your LeetCode submissions to GitHub.
 
