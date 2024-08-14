@@ -1,5 +1,6 @@
 import { fetchHistory } from "./leetcode";
 import { EXTENSION } from "./leetcode";
+import { showAlert } from "./common";
 
 // Global variables for batches and progress
 let globalBatchIndex = 0;
@@ -20,12 +21,20 @@ export async function handleFetchAllSubmissionHistory(button: HTMLInputElement):
     { url: "https://leetcode.com", name: "LEETCODE_SESSION" },
     (cookie) => {
       if (!cookie) {
-        chrome.notifications.create({
-          type: "basic",
-          iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
-          title: "SyncLeet: Error",
-          message: "Please log in to LeetCode first.",
-        });
+        showAlert('leetcode');
+        chrome.storage.local.get(
+          "shouldNotify",
+          (data: { shouldNotify: boolean }): void => {
+            if (data.shouldNotify) {
+              chrome.notifications.create({
+                type: "basic",
+                iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
+                title: "SyncLeet: Error",
+                message: "Please log in to LeetCode first.",
+              });
+            }
+          }
+        );
         button.disabled = false;
         progressContainer.remove();
         return;

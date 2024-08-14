@@ -17,6 +17,12 @@
 
     <main>
       <div class="container mt-4">
+        <div id="alert-danger" class="alert alert-danger d-flex align-items-center mt-4 mx-3" role="alert" style="display: none !important;">
+          <svg class="bi flex-shrink-0 me-2" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+          </svg>
+          <h8 id="alert-message"></h8>
+        </div>
         <h5 class="mb-3 text-center">Control Panel</h5>
         <div class="settings-container d-flex justify-content-between align-items-center mt-4 mx-3">
           <h6 class="mb-0 d-flex align-items-center">Notification
@@ -32,7 +38,7 @@
         <div class="fetch-history-container settings-container justify-content-between mt-4 mx-3">
           <h6 class="mb-0 position-relative">Fetch History</h6> 
           <div id="syncHistory" class="justify-content-between align-items-center sbr">
-            <h8 class="mb-0">This might take a while due to API rate limits and network delays.</h8>
+            <h8 class="mb-0 grey">This might take a while due to API rate limits and network delays.</h8>
             <p class="small-break"></p>
             <button id="fetchAllHistoriesBtn" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Sync all past submission histories from LeetCode.">Start</button>    
           </div>

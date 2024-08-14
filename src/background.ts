@@ -102,18 +102,19 @@ const runMain = async () => {
 };
 
 const onError = (error: Error) => {
-  chrome.notifications.create({
-    type: "basic",
-    iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
-    title: "SyncLeet: An Error Occurred",
-    message: `Report with https://github.com/SyncLeet/extension/issues\nError:${error.message}`,
-  });
+  chrome.storage.local.get(
+    "shouldNotify",
+    (data: { shouldNotify: boolean }): void => {
+      if (data.shouldNotify) {
+        chrome.notifications.create({
+          type: "basic",
+          iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
+          title: "SyncLeet: An Error Occurred",
+          message: `Report with https://github.com/SyncLeet/extension/issues\nError:${error.message}`,
+        });
+      }
+    }
+  );
 };
 
-try {
-  runMain();
-} catch (error) {
-  if (error instanceof Error) {
-    onError(error);
-  }
-}
+runMain().catch(onError);

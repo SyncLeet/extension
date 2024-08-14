@@ -17,8 +17,6 @@
 }
 
 * {
-    background-color: #FFFFFF;
-    color: #101010;
     margin: 0; 
 }
 
@@ -27,6 +25,7 @@ body {
     height: 200px;
     overflow: auto;
     min-height: 200px;
+    background-color: #FFFFFF;
 }
 
 header {
@@ -47,8 +46,9 @@ svg {
 }
 
 .brand-name {
+    color: black;
     margin-left: 0.5rem;
-    font-family: 'Jockey One';
+    font-family: 'Jockey One', sans-serif;
     font-weight: bold;
 }
 
@@ -78,9 +78,16 @@ p {
 
 h8 {
     font-size: 0.775rem;
-    color: grey;
     line-height: 1.5;
     display: block;
+}
+
+.grey {
+    color: grey;
+}
+
+.alert {
+    padding: 0.5rem 0.5rem !important;
 }
 
 .sbr {
