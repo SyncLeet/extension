@@ -93,6 +93,7 @@ export const newRepository = async (octokit: Octokit) => {
       name: "LeetCode",
       description: "Sync: LeetCode -> GitHub",
       private: false,
+      headers: { "Cache-Control": "no-cache" },
     });
   } catch (error) {
     console.error("Failed to create repository using template:", error);
@@ -110,6 +111,7 @@ export const newRepository = async (octokit: Octokit) => {
       const { data } = await octokit.rest.repos.listAutolinks({
         owner: repository.owner.login,
         repo: repository.name,
+        headers: { "Cache-Control": "no-cache" },
       });
       if (data.find((link) => link.key_prefix === "LC-")) {
         return;
@@ -121,6 +123,7 @@ export const newRepository = async (octokit: Octokit) => {
         key_prefix: "LC-",
         url_template: "https://leetcode.com/problems/<num>/description/",
         is_alphanumeric: true,
+        headers: { "Cache-Control": "no-cache" },
       });
     }
   }
@@ -140,13 +143,16 @@ export const commitFiles = async (
   changes: { path: string; content: string }[]
 ) => {
   // Get the authenticated user
-  const { data: user } = await octokit.rest.users.getAuthenticated();
+  const { data: user } = await octokit.rest.users.getAuthenticated(
+    {headers: { "Cache-Control": "no-cache" }}
+  );
 
   // Get the latest commit on the "main" branch
   const latestCommit = await octokit.rest.repos.getCommit({
     owner: user.login,
     repo: "LeetCode",
     ref: "main",
+    headers: { "Cache-Control": "no-cache" },
   });
 
   // Get the tree associated with the latest commit
@@ -154,6 +160,7 @@ export const commitFiles = async (
     owner: user.login,
     repo: "LeetCode",
     tree_sha: latestCommit.data.commit.tree.sha,
+    headers: { "Cache-Control": "no-cache" },
   });
 
   // Create a new tree with the updated files
@@ -166,24 +173,7 @@ export const commitFiles = async (
       mode: "100644",
       content: file.content,
     })),
-  });
-
-  // Fetch the githubCommits from local storage
-  const githubCommits = await new Promise<{ [time: number]: string }>(
-    (resolve) => {
-      chrome.storage.local.get("githubCommits", (result) => {
-        resolve(result.githubCommits || {});
-      });
-    }
-  );
-
-  // Delete commits that are older than 1 minute
-  const currentTime = Date.now();
-  Object.keys(githubCommits).forEach((time) => {
-    const commitTime = parseInt(time);
-    if (currentTime - commitTime >= 60 * 1000) {
-      delete githubCommits[commitTime];
-    }
+    headers: { "Cache-Control": "no-cache" },
   });
 
   // Create a new commit with the updated tree
@@ -192,7 +182,9 @@ export const commitFiles = async (
     repo: "LeetCode",
     message,
     tree: newTree.data.sha,
-    parents: [...Object.values(githubCommits), latestCommit.data.sha],
+    // parents: [...Object.values(githubCommits), latestCommit.data.sha],
+    parents: [latestCommit.data.sha],
+    headers: { "Cache-Control": "no-cache" },
   });
 
   // Update the "main" branch reference to point to the new commit
@@ -201,11 +193,7 @@ export const commitFiles = async (
     repo: "LeetCode",
     ref: `heads/main`,
     sha: newCommit.data.sha,
+    headers: { "Cache-Control": "no-cache" },
   });
 
-  // Record newCommit to githubCommits with the timestamp
-  githubCommits[Date.now()] = newCommit.data.sha;
-
-  // Store the updated githubCommits in local storage
-  chrome.storage.local.set({ githubCommits });
 };
