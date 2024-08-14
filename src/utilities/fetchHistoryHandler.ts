@@ -19,6 +19,18 @@ export async function handleFetchAllSubmissionHistory(button: HTMLInputElement):
   chrome.cookies.get(
     { url: "https://leetcode.com", name: "LEETCODE_SESSION" },
     (cookie) => {
+      if (!cookie) {
+        chrome.notifications.create({
+          type: "basic",
+          iconUrl: chrome.runtime.getURL("asset/image/logox128.png"),
+          title: "SyncLeet: Error",
+          message: "Please log in to LeetCode first.",
+        });
+        button.disabled = false;
+        progressContainer.remove();
+        return;
+      }
+
       fetchHistory(cookie.value, (m, n) => {
         updateProgressBar(
           progressContainer,
