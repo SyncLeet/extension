@@ -117,4 +117,8 @@ const onError = (error: Error) => {
   );
 };
 
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.local.set({ shouldNotify: true });
+})
+
 runMain().catch(onError);
