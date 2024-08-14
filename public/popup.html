@@ -1,42 +1,46 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SyncLeet - Quick Settings</title>
+    <title>SyncLeet</title>
     <meta charset="utf-8" />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="asset/style/bootstrap.min.css"
-    />
+    <link rel="stylesheet" type="text/css" href="asset/style/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="asset/style/popup.css" />
   </head>
 
   <body>
     <header class="header d-flex justify-content-start align-items-center">
-      <a
-        href="https://chromewebstore.google.com/detail/syncleet/maoikpiiondffkjfhjgdcfjklnmadhfk"
-        target="_blank"
-      >
-        <img src="asset/image/logo_32.png" alt="Logo" class="brand-logo" />
+      <a href="https://chromewebstore.google.com/detail/syncleet/maoikpiiondffkjfhjgdcfjklnmadhfk" target="_blank">
+        <img src="asset/image/logox128.png" alt="Logo" class="brand-logo" />
         <span class="mb-0 ml-4 brand-name">SyncLeet</span>
       </a>
     </header>
 
     <main>
       <div class="container mt-4">
+        <div id="alert-danger" class="alert alert-danger d-flex align-items-center mt-4 mx-3" role="alert" style="display: none !important;">
+          <svg class="bi flex-shrink-0 me-2" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+          </svg>
+          <h8 id="alert-message"></h8>
+        </div>
         <h5 class="mb-3 text-center">Control Panel</h5>
-        <div
-          class="settings-container d-flex justify-content-between align-items-center mt-4 mx-3"
-        >
-          <h6 class="mb-0">Notification</h6>
+        <div class="settings-container d-flex justify-content-between align-items-center mt-4 mx-3">
+          <h6 class="mb-0 d-flex align-items-center">Notification
+            <div title="Please ensure Chrome notifications are turned on in your browser settings.">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g clip-path="url(#clip0_429_11160)"> <circle cx="12" cy="11.9999" r="9" stroke="#FFA115" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></circle> <rect x="12" y="8" width="0.01" height="0.01" stroke="#FFA115" stroke-width="3.75" stroke-linejoin="round"></rect> <path d="M12 12V16" stroke="#FFA115" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path> </g> <defs> <clipPath id="clip0_429_11160"> <rect width="24" height="24" fill="white"></rect> </clipPath> </defs> </g></svg>
+            </div>
+            </h6>
           <div class="form-check form-switch mt-1">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              role="switch"
-              id="notificationStatus"
-              checked
-            />
+            <input class="form-check-input" type="checkbox" role="switch" id="shouldNotify" checked />
+          </div>
+        </div>
+
+        <div class="fetch-history-container settings-container justify-content-between mt-4 mx-3">
+          <h6 class="mb-0 position-relative">Fetch History</h6> 
+          <div id="syncHistory" class="justify-content-between align-items-center sbr">
+            <h8 class="mb-0 grey">This might take a while due to API rate limits and network delays.</h8>
+            <p class="small-break"></p>
+            <button id="fetchAllHistoriesBtn" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Sync all past submission histories from LeetCode.">Start</button>    
           </div>
         </div>
       </div>
@@ -44,19 +48,11 @@
 
     <footer class="footer mt-4 text-center">
       <p class="mb-0" style="font-size: 12px">
-        <a href="https://github.com/SyncLeet/extension/wiki/FAQ" target="_blank"
-          >FAQ</a
-        >
+        <a href="https://github.com/SyncLeet/extension/wiki/FAQ" target="_blank">FAQ</a>
         |
-        <a href="https://github.com/SyncLeet/extension/issues" target="_blank"
-          >Feature Request</a
-        >
+        <a href="https://github.com/SyncLeet/extension/issues" target="_blank">Bug Report</a>
         |
-        <a
-          href="https://chromewebstore.google.com/detail/syncleet/maoikpiiondffkjfhjgdcfjklnmadhfk/reviews"
-          target="_blank"
-          >Reviews</a
-        >
+        <a href="https://chromewebstore.google.com/detail/syncleet/maoikpiiondffkjfhjgdcfjklnmadhfk/reviews" target="_blank">Reviews</a>
       </p>
     </footer>
 

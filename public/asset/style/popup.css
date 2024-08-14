@@ -3,7 +3,7 @@
     font-style: normal;
     font-weight: 400;
     font-display: swap;
-    src: url(asset/font/HTxpL2g2KjCFj4x8WI6AnI_xHLOk.woff2) format('woff2');
+    src: url(../font/HTxpL2g2KjCFj4x8WI6AnI_xHLOk.woff2) format('woff2');
     unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
@@ -12,13 +12,11 @@
     font-style: normal;
     font-weight: 400;
     font-display: swap;
-    src: url(asset/font/HTxpL2g2KjCFj4x8WI6AnIHxHA.woff2) format('woff2');
+    src: url(../font/HTxpL2g2KjCFj4x8WI6AnIHxHA.woff2) format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 * {
-    background-color: #FFFFFF;
-    color: #101010;
     margin: 0; 
 }
 
@@ -27,6 +25,7 @@ body {
     height: 200px;
     overflow: auto;
     min-height: 200px;
+    background-color: #FFFFFF;
 }
 
 header {
@@ -47,8 +46,9 @@ svg {
 }
 
 .brand-name {
+    color: black;
     margin-left: 0.5rem;
-    font-family: 'Jockey One';
+    font-family: 'Jockey One', sans-serif;
     font-weight: bold;
 }
 
@@ -62,6 +62,37 @@ main {
 
 #container {
     padding: 18px 0 0 24px;
+}
+
+.settings-container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+
+p {
+    font-size: 0.675rem;
+}
+
+h8 {
+    font-size: 0.775rem;
+    line-height: 1.5;
+    display: block;
+}
+
+.grey {
+    color: grey;
+}
+
+.alert {
+    padding: 0.5rem 0.5rem !important;
+}
+
+.sbr {
+    display: block;
+    margin-top: 5px;
 }
 
 .form-check-input[type="checkbox"] {
@@ -85,6 +116,36 @@ main {
     height: 1rem;
     background-color: #fff;
     transition: all 0.3s;
+}
+
+.progress-bar-animated {
+    background-color: #FFA115 !important;
+}
+
+.btn {
+    background-color: #FFA115 !important;
+    border-color: #FFA115 !important;
+    width: 100%;
+    height: auto;
+}
+
+.btn:disabled {
+    background-color: #FFA115 !important;
+    border-color: #FFA115 !important;
+    color: #FFFFFF;
+}
+
+.btn:hover {
+    color:#FFA115 !important;
+    background-color: white !important;
+}
+
+.btn:focus {
+    outline: none;
+}
+
+div[title] {
+    cursor: pointer;
 }
 
 footer {
