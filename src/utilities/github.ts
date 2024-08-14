@@ -76,12 +76,13 @@ export const newOctokit = async (): Promise<Octokit> => {
  */
 export const newRepository = async (octokit: Octokit) => {
   // Check if the repository already exists
-  const { data } = await octokit.rest.repos.listForAuthenticatedUser({
-    headers: { 'Cache-Control': 'no-cache' }  // Forces a fresh request
-  });
-  
-  if (data.find((repo) => repo.name === "LeetCode")) {
-    return;
+  {
+    const { data } = await octokit.rest.repos.listForAuthenticatedUser({
+      headers: { "Cache-Control": "no-cache" }, // Forces a fresh request
+    });
+    if (data.find((repo) => repo.name === "LeetCode")) {
+      return;
+    }
   }
 
   // Create the repository using a template
@@ -99,10 +100,9 @@ export const newRepository = async (octokit: Octokit) => {
   }
 
   // Wait for the repository to be created
-  while (true) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  {
     const { data } = await octokit.rest.repos.listForAuthenticatedUser({
-      headers: { 'Cache-Control': 'no-cache' }  // Forces a fresh request
+      headers: { "Cache-Control": "no-cache" }, // Forces a fresh request
     });
     const repository = data.find((repo) => repo.name === "LeetCode");
     if (repository) {
@@ -112,7 +112,7 @@ export const newRepository = async (octokit: Octokit) => {
         repo: repository.name,
       });
       if (data.find((link) => link.key_prefix === "LC-")) {
-        break;
+        return;
       }
       // Create autolinks for LeetCode problems
       await octokit.rest.repos.createAutolink({
