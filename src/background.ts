@@ -1,4 +1,4 @@
-import { newOctokit, commitFiles, newRepository } from "./utilities/github";
+import { newOctokit, commitFiles, newRepository, getAndStoreUserPlan } from "./utilities/github";
 import { fetchSubmissionById, fetchTopicsBySlug } from "./utilities/leetcode";
 import { EXTENSION } from "./utilities/leetcode";
 
@@ -9,6 +9,9 @@ const runMain = async () => {
   const octokit = await newOctokit();
   await newRepository(octokit);
 
+  // Get and store the user's GitHub plan
+  const plan = await getAndStoreUserPlan(octokit);
+  
   /**
    * Listen for files commit
    */
@@ -66,7 +69,9 @@ const runMain = async () => {
               );
               // Synchronize to GitHub on a topic-by-topic basis
               const { titleSlug, runtime, memory, language } = submission;
-              const message = `LC-${titleSlug} [Runtime: ${runtime}; Memory: ${memory}]`;
+              const prefix = plan === "pro" ? "LC-" : ":ballot_box_with_check: ";
+              const message = `${prefix}${titleSlug} [Runtime: ${runtime}; Memory: ${memory}]`;
+
               const changes: { path: string; content: string }[] = [];
               for (const topicSlug of topics) {
                 changes.push({
