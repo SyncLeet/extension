@@ -34,7 +34,7 @@ export const retry = async <T>(
  * @param type The type of alert to display ('leetcode' or 'github')
  * @param customMessage An optional custom message to display in the alert
  */
-export function showAlert(type: 'leetcode', customMessage?: string): void {
+export function showAlert(type: 'leetcode' | 'custom', customMessage?: string): void {
   const alertDiv = document.getElementById("alert-danger");
   const alertMessage = document.getElementById("alert-message");
 
@@ -42,12 +42,10 @@ export function showAlert(type: 'leetcode', customMessage?: string): void {
     alertDiv.style.setProperty('display', 'flex', 'important');
 
     let message;
-    if (customMessage) {
+    if (type === 'custom' && customMessage) {
       message = customMessage;
-    } else {
-      if (type === 'leetcode') {
-        message = 'Please <a href="https://leetcode.com/accounts/login/" class="alert-link" target="_blank">login</a> to LeetCode first.';
-      }
+    } else if (type === 'leetcode') {
+      message = 'Please <a href="https://leetcode.com/accounts/login/" class="alert-link" target="_blank">login</a> to LeetCode first.';
     }
 
     alertMessage.innerHTML = message;

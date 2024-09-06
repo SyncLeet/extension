@@ -1,4 +1,5 @@
 import { Octokit } from "octokit";
+import { showAlert } from "./common";
 
 /**
  * Creates a new instance of Octokit with an authentication token.
@@ -23,7 +24,7 @@ export const newOctokit = async (): Promise<Octokit> => {
   const params = new URLSearchParams({
     client_id: process.env.CLIENT_ID,
     redirect_uri: chrome.identity.getRedirectURL(),
-    scope: "repo user:email",
+    scope: "repo user:email read:user",
   });
   const responseURL = await new Promise<string>((resolve, reject) => {
     chrome.identity.launchWebAuthFlow(
@@ -69,11 +70,27 @@ export const newOctokit = async (): Promise<Octokit> => {
 };
 
 /**
- * Creates a new repository named "LeetCode" if it doesn't already exist.
- * The repository is created using a template repository and includes autolinks for LeetCode problems.
+ * Retrieves the authenticated user's GitHub plan and stores it in Chrome storage.
+ * This function is used to determine if the user has a Pro plan, which is required for creating autolinks.
  * @param octokit - The Octokit instance used for making API requests.
- * @returns A Promise that resolves when the repository and autolinks are created.
+ * @returns A Promise that resolves to the user's GitHub plan name, or null if the plan could not be retrieved.
  */
+export const getAndStoreUserPlan = async (octokit: Octokit) => {
+  try {
+    const { data } = await octokit.request('GET /user', {
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    });
+    const plan = data.plan.name;
+    chrome.storage.sync.set({ githubPlan: plan });
+    return plan;
+  } catch (error) {
+    console.error("Failed to retrieve user plan:", error);
+    return null;
+  }
+};
+
 export const newRepository = async (octokit: Octokit) => {
   // Check if the repository already exists
   {
@@ -116,15 +133,26 @@ export const newRepository = async (octokit: Octokit) => {
       if (data.find((link) => link.key_prefix === "LC-")) {
         return;
       }
-      // Create autolinks for LeetCode problems
-      await octokit.rest.repos.createAutolink({
-        owner: repository.owner.login,
-        repo: repository.name,
-        key_prefix: "LC-",
-        url_template: "https://leetcode.com/problems/<num>/description/",
-        is_alphanumeric: true,
-        headers: { "Cache-Control": "no-cache" },
-      });
+
+      // Get and store the user's GitHub plan
+      const plan = await getAndStoreUserPlan(octokit);
+      if (plan === "pro") {
+        // Create autolinks for LeetCode problems
+        try {
+          await octokit.rest.repos.createAutolink({
+            owner: repository.owner.login,
+            repo: repository.name,
+            key_prefix: "LC-",
+            url_template: "https://leetcode.com/problems/<num>/description/",
+            is_alphanumeric: true,
+            headers: { "Cache-Control": "no-cache" },
+          });
+        } catch (error) {
+          showAlert('custom', 'Failed to create autolinks.');
+        }
+      } else {
+        showAlert('custom', 'Autolinks are only supported for GitHub Pro accounts.');
+      }
     }
   }
 };
